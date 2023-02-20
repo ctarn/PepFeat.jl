@@ -1,0 +1,93 @@
+<html>
+<head>
+<title>PepFeat</title>
+<style>
+* {
+    font-family: Helvetica, Arial, sans-serif;
+    color: grey;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: lightblue;
+}
+
+div.wrapper {
+    width: 800px;
+    margin: 16px auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+header {
+    width: 100%;
+    text-align: center;
+    margin: 16px auto;
+}
+
+main {
+    width: 100%;
+    min-height: 520px;
+    margin: 16px auto;
+}
+
+div.toc {
+    width: 40%;
+    float: right;
+}
+
+footer {
+    width: 100%;
+    margin: 16px auto;
+    display: flex;
+    justify-content: space-around;
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+<header><h1>PepFeat</h1></header>
+<main>
+PepFeat is used to detect peptide features from LC-MS map.
+It is based on <a href="http://peppre.ctarn.io">PepPre</a>.
+
+<h2>Usage</h2>
+<ul>
+    <li>PepFeat will generate the isotopic pattern vectors (IPV) on the first run, and it may cost minutes.</li>
+</ul>
+
+<h2>Release</h2>
+{{ release }}
+
+<h2>Q&A</h2>
+<ul>
+    <li>
+        macOS says: “PepFeat.app” is damaged and can’t be opened. You should move it to the Trash.
+        <br /><br />
+        Please run `sudo xattr -r -d com.apple.quarantine [path/to/PepFeat.app]` in terminal.
+    </li>
+    <br />
+    <li>
+        Windows Security stops the software and deletes the .exe file.
+        <br /><br />
+        The software is packaged using PyInstaller, and can be detected as virus by mistake on Windows (see <a href="https://github.com/pyinstaller/pyinstaller/issues/5932">the issue</a>).
+        Please restore the deleted file from `Protection History`, and Windows Security should not stop or delete it again.
+        Otherwise, please add the software to white list.
+        You can also package the software from source yourself.
+    </li>
+</ul>
+
+<h2>Source</h2>
+<ul>
+    <li><a href="https://github.com/ctarn/MesCore.jl">MesCore.jl</a></li>
+    <li><a href="https://github.com/ctarn/PepIso.jl">PepIso.jl</a></li>
+    <li><a href="https://github.com/ctarn/PepFeat.jl">PepFeat.jl</a></li>
+</ul>
+</main>
+<footer>
+    <span><a href="http://ctarn.io">http://ctarn.io</a></span>
+    <span>Copyright &copy; Tarn Yeong Ching</span>
+    <span><a href="mailto:i@ctarn.io">i@ctarn.io</a></span></footer>
+</div>
+</body>
+</html>
