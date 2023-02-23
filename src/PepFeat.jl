@@ -107,12 +107,7 @@ detect_feature(fname, args) = begin
     addprocs(parse(Int, args["proc"]))
     @eval @everywhere using PepFeat
     I = @showprogress pmap(M) do m
-        if length(m.peaks) <= max_n
-            peaks = m.peaks
-        else
-            τ = partialsort!(map(p -> p.inten, m.peaks), max_n; rev=true)
-            peaks = filter(p -> p.inten ≥ τ, m.peaks)
-        end
+        peaks = MesCore.pick_by_inten(m.peaks, max_n)
         ions = [MesCore.Ion(p.mz, z) for p in peaks for z in zs]
         ions = filter(i -> i.mz * i.z < length(V) && PepIso.prefilter(i, peaks, ε, V), ions)
         ions = split_and_evaluate(ions, peaks, τ_exclusion, ε, V)
