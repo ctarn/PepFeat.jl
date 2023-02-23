@@ -11,10 +11,6 @@ import MesCore
 import PepIso: PepIso, IPV
 import ProgressMeter: @showprogress
 
-check_ion(ion, spec, ε, V) = begin
-    all(map(mz -> !isempty(MesCore.query(spec, (1 - ε) * mz, (1 + ε) * mz)), [IPV.ipv_mz(ion, i, V) for i in 1:2]))
-end
-
 split_ions(ions, spec, ε, V) = begin
     items = [(; i, n, mz=IPV.ipv_mz(ion, n, V)) for (i, ion) in enumerate(ions) for n in eachindex(IPV.ipv_w(ion, V))]
     cs = map(p -> (; p.mz, p.inten, slots=empty(items)), spec)
@@ -118,7 +114,7 @@ detect_feature(fname, args) = begin
             peaks = filter(p -> p.inten ≥ τ, m.peaks)
         end
         ions = [MesCore.Ion(p.mz, z) for p in peaks for z in zs]
-        ions = filter(i -> i.mz * i.z < length(V) && check_ion(i, peaks, ε, V), ions)
+        ions = filter(i -> i.mz * i.z < length(V) && PepIso.prefilter(i, peaks, ε, V), ions)
         ions = split_and_evaluate(ions, peaks, τ_exclusion, ε, V)
         ions = [(; ion..., ms=m) for ion in ions]
     end
