@@ -84,34 +84,7 @@ detect_feature(fname, args) = begin
         ions = split_and_evaluate(ions, peaks, τ_exclusion, ε, V)
         ions = [(; ion..., ms=m) for ion in ions]
     end
-    G = []
-    for z in zs
-        @info "grouping (charge state: $(z))"
-        tmp = []
-        gs = ones(Int, length(tmp))
-        @showprogress for ions in I
-            s = gs .> gap
-            append!(G, tmp[s])
-            tmp, gs = tmp[.!s], gs[.!s]
-            for ion in filter(i -> i.z == z, ions)
-                grouped = false
-                for (j, t) in enumerate(tmp)
-                    if MesCore.in_moe(ion.mz, t[end].mz, ε)
-                        push!(t, ion)
-                        grouped = true
-                        gs[j] = 0
-                        break
-                    end
-                end
-                if !grouped
-                    push!(tmp, [ion])
-                    push!(gs, 0)
-                end
-            end
-            gs .+= 1
-        end
-        append!(G, tmp)
-    end
+    G = PepIso.group_ions(I, gap)
     d = Dict{Int, Int}()
     foreach(l -> d[l] = get(d, l, 0) + 1, map(length, G))
     foreach(k -> println("$(k)\t$(get(d, k, 0))"), minimum(keys(d)):100)
