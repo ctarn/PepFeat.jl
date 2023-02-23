@@ -84,7 +84,7 @@ detect_feature(fname, args) = begin
         ions = split_and_evaluate(ions, peaks, τ_exclusion, ε, V)
         ions = [(; ion..., ms=m) for ion in ions]
     end
-    G = PepIso.group_ions(I, gap)
+    G = PepIso.group_ions(I, gap, ε)
     d = Dict{Int, Int}()
     foreach(l -> d[l] = get(d, l, 0) + 1, map(length, G))
     foreach(k -> println("$(k)\t$(get(d, k, 0))"), minimum(keys(d)):100)
