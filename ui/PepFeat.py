@@ -33,7 +33,7 @@ vars_spec = {
     "charge_min": {"type": tk.StringVar, "value": "2"},
     "charge_max": {"type": tk.StringVar, "value": "6"},
     "out": {"type": tk.StringVar, "value": ""},
-    "pepfeat": {"type": tk.StringVar, "value": util.get_content("PepFeat", "bin", "PepFeat")},
+    "pepfeat": {"type": tk.StringVar, "value": util.get_content("PepFeat", "bin", "PepFeatDetect")},
     "thermorawread": {"type": tk.StringVar, "value": util.get_content("ThermoRawRead", "ThermoRawRead.exe", shared=True)},
     "mono": {"type": tk.StringVar, "value": path_mono},
     "proc": {"type": tk.StringVar, "value": "4"},
