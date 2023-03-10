@@ -5,22 +5,15 @@ import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, scrolledtext
 
+import meta
 import util
 
-name = "PepFeat"
-version = "1.0.0"
-author = "Tarn Yeong Ching"
-url = f"http://{name.lower()}.ctarn.io"
-server = f"http://api.ctarn.io/{name}/{version}"
-copyright = f"{name} {version}\nCopyright © 2023 {author}\n{url}"
-
-dir_cfg = os.path.join(Path.home(), f".{name}", version)
-os.makedirs(dir_cfg, exist_ok=True)
-path_autosave = os.path.join(dir_cfg, "autosave.task")
+os.makedirs(meta.homedir, exist_ok=True)
+path_autosave = os.path.join(meta.homedir, "autosave.task")
 
 win = tk.Tk()
-win.title(name)
-win.iconphoto(True, tk.PhotoImage(file=util.get_content(f"{name}.png", shared=True)))
+win.title(meta.name)
+win.iconphoto(True, tk.PhotoImage(file=util.get_content(f"{meta.name}.png", shared=True)))
 win.resizable(False, False)
 main = ttk.Frame(win)
 main.grid(column=0, row=0, padx=16, pady=8)
@@ -32,7 +25,7 @@ else:
 
 vars_spec = {
     "data": {"type": tk.StringVar, "value": ""},
-    "model": {"type": tk.StringVar, "value": os.path.join(dir_cfg, "IPV.bson")},
+    "model": {"type": tk.StringVar, "value": os.path.join(meta.homedir, "IPV.bson")},
     "exclusion": {"type": tk.StringVar, "value": "1.0"},
     "error": {"type": tk.StringVar, "value": "10.0"},
     "gap": {"type": tk.StringVar, "value": "16"},
@@ -205,13 +198,13 @@ ttk.Label(main, text="Parallelization:").grid(column=0, row=row, sticky="W")
 ttk.Entry(main, textvariable=vars["proc"]).grid(column=1, row=row, sticky="WE")
 row += 1
 
-ttk.Label(main, text=copyright, justify="center").grid(column=0, row=row, columnspan=3)
+ttk.Label(main, text=meta.copyright, justify="center").grid(column=0, row=row, columnspan=3)
 
 sys.stdout = util.Console(console)
 sys.stderr = util.Console(console)
 
 if getattr(sys, 'frozen', False):
-    threading.Thread(target=lambda: util.show_headline(server, main, 3)).start()
+    threading.Thread(target=lambda: util.show_headline(meta.server, main, 3)).start()
 
 util.load_task(path_autosave, vars)
 
