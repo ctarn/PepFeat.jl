@@ -130,7 +130,7 @@ def do_save():
     path = vars["out"].get()
     if len(path) > 0:
         os.makedirs(path, exist_ok=True)
-        util.save_task(os.path.join(path, "PepFeat.task"), vars)
+        util.save_task(os.path.join(path, "PepFeatDetect.task"), vars)
     else:
         print("`Output Directory` is required")
 
