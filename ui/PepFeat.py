@@ -37,4 +37,7 @@ if getattr(sys, 'frozen', False):
 import PepFeatDetect
 notebook.add(PepFeatDetect.main, text="Feature Detection")
 
+import PepFeatAlign
+notebook.add(PepFeatAlign.main, text="Feature Alignment")
+
 tk.mainloop()
