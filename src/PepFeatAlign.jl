@@ -98,7 +98,7 @@ main() = begin
     end
     args = ArgParse.parse_args(settings)
     for path in args["data"], file in readdir(dirname(path))
-        if startswith(file, basename(path)) && endswith(file, ".csv")
+        if file == basename(path) || (startswith(file, basename(path)) && endswith(file, ".csv"))
             align_feature(joinpath(dirname(path), file), args)
         end
     end
