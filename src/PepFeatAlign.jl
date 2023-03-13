@@ -9,21 +9,21 @@ import MesCore
 import ProgressMeter: @showprogress
 
 prepare(args) = begin
-    l = parse(Float64, args["l"])
+    len_rt = parse(Float64, args["l"])
     ε_m = parse(Float64, args["m"]) * 1e-6
     ε_t = parse(Float64, args["t"])
-    b = parse(Float64, args["b"])
+    bin_size = parse(Float64, args["b"])
     α = parse(Float64, args["f"])
     softer = MesCore.exp_softer(parse(Float64, args["s"]))
     @info "reference loading from " * args["ref"]
     df_ref = args["ref"] |> CSV.File |> DataFrames.DataFrame
-    df_ref = df_ref[df_ref.rtime_len .≥ l, :]
+    df_ref = df_ref[df_ref.rtime_len .≥ len_rt, :]
     DataFrames.sort!(df_ref, :mz)
     out = mkpath(args["o"])
-    return (; df_ref, l, ε_m, ε_t, b, α, softer, out)
+    return (; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out)
 end
 
-align_feature(path; df_ref, l, ε_m, ε_t, b, α, softer, out) = begin
+align_feature(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = begin
     @info "feature list loading from " * path
     df = path |> CSV.File |> DataFrames.DataFrame
     df.matched .= false
@@ -33,7 +33,7 @@ align_feature(path; df_ref, l, ε_m, ε_t, b, α, softer, out) = begin
     df.delta_rt_aligned .= Inf
     df.delta_mz .= Inf
     df.delta_abu .= Inf
-    df.bin = round.(Int, df.rtime ./ b)
+    df.bin = round.(Int, df.rtime ./ bin_size)
     bin_min, bin_max = extrema(df.bin)
     bins = [Int[] for _ in (bin_min-1):(bin_max+1)]
     Δs = zeros(length(bins))
@@ -48,7 +48,7 @@ align_feature(path; df_ref, l, ε_m, ε_t, b, α, softer, out) = begin
         for i_f in bins[i_b]
             a = df[i_f, :]
             a.rtime_aligned = a.rtime + Δs[i_b-1]
-            if a.rtime_len < l continue end
+            if a.rtime_len < len_rt continue end
             idx = filter(MesCore.argquery_ε(df_ref.mz, a.mz, ε_m)) do i
                 referable[i] && df_ref[i, :z] == a.z && abs(df_ref[i, :rtime] - a.rtime_aligned) ≤ ε_t
             end
