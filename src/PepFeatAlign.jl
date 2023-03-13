@@ -6,18 +6,24 @@ import DataFrames
 import MesCore
 import ProgressMeter: @showprogress
 
-align_feature(path, args) = begin
+prepare(args) = begin
     l = parse(Float64, args["l"])
     ε_m = parse(Float64, args["m"]) * 1e-6
     ε_t = parse(Float64, args["t"])
     α = parse(Float64, args["f"])
-    @info "feature list loading from " * path
-    df = path |> CSV.File |> DataFrames.DataFrame
-    DataFrames.sort!(df, :rtime)
     @info "reference loading from " * args["ref"]
     df_ref = args["ref"] |> CSV.File |> DataFrames.DataFrame
     df_ref = df_ref[df_ref.rtime_len .≥ l, :]
     DataFrames.sort!(df_ref, :mz)
+    softer = MesCore.exp_softer(parse(Float64, args["s"]))
+    out = mkpath(args["o"])
+    return (; df_ref, l, ε_m, ε_t, α, softer, out)
+end
+
+align_feature(path; df_ref, l, ε_m, ε_t, α, softer, out) = begin
+    @info "feature list loading from " * path
+    df = path |> CSV.File |> DataFrames.DataFrame
+    DataFrames.sort!(df, :rtime)
     df.matched .= false
     df.match_id .= 0
     df.rtime_aligned .= Inf
@@ -25,7 +31,6 @@ align_feature(path, args) = begin
     df.delta_rt_aligned .= Inf
     df.delta_mz .= Inf
     df.delta_abu .= Inf
-    softer = MesCore.exp_softer(parse(Float64, args["s"]))
     Δ = 0.0
     @showprogress for a in eachrow(df)
         a.rtime_aligned = a.rtime + Δ
@@ -45,15 +50,14 @@ align_feature(path, args) = begin
         a.delta_mz = MesCore.error_ppm(a.mz, b.mz)
         a.delta_abu = b.inten_apex / a.inten_apex
     end
-    mkpath(args["o"])
-    path_out = joinpath(args["o"], splitext(basename(path))[1] * "_aligned.csv")
+    path_out = joinpath(out, splitext(basename(path))[1] * "_aligned.csv")
     @info "saving to " * path_out * "~"
     CSV.write(path_out * "~", df)
     mv(path_out * "~", path_out; force=true)
     @info "saved to " * path_out
 
     df_shift = DataFrames.DataFrame(time=df.rtime, shift=df.rtime_aligned .- df.rtime)[df.matched, :]
-    path_out = joinpath(args["o"], splitext(basename(path))[1] * "_shift.csv")
+    path_out = joinpath(out, splitext(basename(path))[1] * "_shift.csv")
     @info "saving to " * path_out * "~"
     CSV.write(path_out * "~", df_shift)
     mv(path_out * "~", path_out; force=true)
@@ -97,9 +101,10 @@ main() = begin
             required = true
     end
     args = ArgParse.parse_args(settings)
+    sess = prepare(args)
     for path in args["data"], file in readdir(dirname(path))
         if file == basename(path) || (startswith(file, basename(path)) && endswith(file, ".csv"))
-            align_feature(joinpath(dirname(path), file), args)
+            align_feature(joinpath(dirname(path), file); sess...)
         end
     end
 end
