@@ -42,6 +42,7 @@ align_feature(path; df_ref, l, ε_m, ε_t, b, α, softer, out) = begin
     @showprogress for (i, idx) in enumerate(df.bin_idx)
         push!(bins[idx], i)
     end
+    referable = trues(DataFrames.nrow(df_ref))
     @showprogress for i_b in 2:(length(bins)-1)
         δs = Float64[]
         for i_f in bins[i_b]
@@ -49,10 +50,11 @@ align_feature(path; df_ref, l, ε_m, ε_t, b, α, softer, out) = begin
             a.rtime_aligned = a.rtime + Δs[i_b-1]
             if a.rtime_len < l continue end
             idx = filter(MesCore.argquery_ε(df_ref.mz, a.mz, ε_m)) do i
-                df_ref[i, :z] == a.z && abs(df_ref[i, :rtime] - a.rtime_aligned) ≤ ε_t
+                referable[i] && df_ref[i, :z] == a.z && abs(df_ref[i, :rtime] - a.rtime_aligned) ≤ ε_t
             end
-            if length(idx) == 0 continue end
+            if isempty(idx) continue end
             _, i = findmin(x -> abs(df_ref[x, :rtime] - a.rtime_aligned), idx)
+            referable[idx[i]] = false
             b = df_ref[idx[i], :]
             δ = b.rtime - a.rtime
             push!(δs, δ)
