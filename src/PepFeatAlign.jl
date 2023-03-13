@@ -73,7 +73,7 @@ align_feature(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = beg
     mv(path_out * "~", path_out; force=true)
     @info "saved to " * path_out
 
-    df_shift = DataFrames.DataFrame(time=df.rtime, shift=df.rtime_aligned .- df.rtime)[df.matched, :]
+    df_shift = DataFrames.DataFrame(time=Vector((bin_min:bin_max) * bin_size), shift=Δs[begin+1:end-1])
     path_out = joinpath(out, splitext(basename(path))[1] * "_shift.csv")
     @info "saving to " * path_out * "~"
     CSV.write(path_out * "~", df_shift)
