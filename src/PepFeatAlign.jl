@@ -9,21 +9,21 @@ import MesCore
 import ProgressMeter: @showprogress
 
 prepare(args) = begin
-    b = parse(Float64, args["b"])
     l = parse(Float64, args["l"])
     ε_m = parse(Float64, args["m"]) * 1e-6
     ε_t = parse(Float64, args["t"])
+    b = parse(Float64, args["b"])
     α = parse(Float64, args["f"])
+    softer = MesCore.exp_softer(parse(Float64, args["s"]))
     @info "reference loading from " * args["ref"]
     df_ref = args["ref"] |> CSV.File |> DataFrames.DataFrame
     df_ref = df_ref[df_ref.rtime_len .≥ l, :]
     DataFrames.sort!(df_ref, :mz)
-    softer = MesCore.exp_softer(parse(Float64, args["s"]))
     out = mkpath(args["o"])
-    return (; df_ref, b, l, ε_m, ε_t, α, softer, out)
+    return (; df_ref, l, ε_m, ε_t, b, α, softer, out)
 end
 
-align_feature(path; df_ref, b, l, ε_m, ε_t, α, softer, out) = begin
+align_feature(path; df_ref, l, ε_m, ε_t, b, α, softer, out) = begin
     @info "feature list loading from " * path
     df = path |> CSV.File |> DataFrames.DataFrame
     df.matched .= false
@@ -82,18 +82,6 @@ end
 main() = begin
     settings = ArgParse.ArgParseSettings(prog="PepFeatAlign")
     ArgParse.@add_arg_table! settings begin
-        "-b"
-            help = "moving average step (or, bin size)"
-            metavar = "second"
-            default = "1.0"
-        "-f"
-            help = "moving average factor (or, updating rate)"
-            metavar = "factor"
-            default = "0.1"
-        "-s"
-            help = "moving average scale"
-            metavar = "scale"
-            default = "64"
         "-l"
             help = "min retention time length"
             metavar = "second"
@@ -106,6 +94,18 @@ main() = begin
             help = "max retention time error"
             metavar = "second"
             default = "600.0"
+        "-b"
+            help = "moving average step (or, bin size)"
+            metavar = "second"
+            default = "1.0"
+        "-f"
+            help = "moving average factor (or, updating rate)"
+            metavar = "factor"
+            default = "0.1"
+        "-s"
+            help = "moving average scale"
+            metavar = "scale"
+            default = "64"
         "-o"
             help = "output directory"
             metavar = "output"
