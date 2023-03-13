@@ -19,11 +19,12 @@ else:
 vars_spec = {
     "data": {"type": tk.StringVar, "value": ""},
     "ref": {"type": tk.StringVar, "value": ""},
-    "factor": {"type": tk.StringVar, "value": "0.1"},
-    "scale": {"type": tk.StringVar, "value": "64"},
+    "len_rt": {"type": tk.StringVar, "value": "4.0"},
     "error_mz": {"type": tk.StringVar, "value": "1.0"},
     "error_rt": {"type": tk.StringVar, "value": "600.0"},
-    "len_rt": {"type": tk.StringVar, "value": "4.0"},
+    "bin": {"type": tk.StringVar, "value": "1.0"},
+    "factor": {"type": tk.StringVar, "value": "0.1"},
+    "scale": {"type": tk.StringVar, "value": "64"},
     "out": {"type": tk.StringVar, "value": ""},
     "pepfeatalign": {"type": tk.StringVar, "value": util.get_content("PepFeat", "bin", "PepFeatAlign")},
 }
@@ -61,12 +62,8 @@ ttk.Entry(main, textvariable=vars["ref"]).grid(column=1, row=row, sticky="WE")
 ttk.Button(main, text="Select", command=do_select_ref).grid(column=2, row=row, sticky="W")
 row += 1
 
-ttk.Label(main, text="Moving Average Factor:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["factor"]).grid(column=1, row=row, sticky="WE")
-row += 1
-
-ttk.Label(main, text="Moving Average Scale:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["scale"]).grid(column=1, row=row, sticky="WE")
+ttk.Label(main, text="Min RTime Length:").grid(column=0, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["len_rt"]).grid(column=1, row=row, sticky="WE")
 ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
 row += 1
 
@@ -80,8 +77,17 @@ ttk.Entry(main, textvariable=vars["error_rt"]).grid(column=1, row=row, sticky="W
 ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
 row += 1
 
-ttk.Label(main, text="Min RTime Length:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["len_rt"]).grid(column=1, row=row, sticky="WE")
+ttk.Label(main, text="Moving Average Step:").grid(column=0, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["bin"]).grid(column=1, row=row, sticky="WE")
+ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
+row += 1
+
+ttk.Label(main, text="Moving Average Factor:").grid(column=0, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["factor"]).grid(column=1, row=row, sticky="WE")
+row += 1
+
+ttk.Label(main, text="Moving Average Scale:").grid(column=0, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["scale"]).grid(column=1, row=row, sticky="WE")
 ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
 row += 1
 
@@ -99,11 +105,12 @@ def run_pepfeatalign(path):
         vars["pepfeatalign"].get(),
         path,
         "--ref", vars["ref"].get(),
-        "-f", vars["factor"].get(),
-        "-s", vars["scale"].get(),
+        "-l", vars["len_rt"].get(),
         "-m", vars["error_mz"].get(),
         "-t", vars["error_rt"].get(),
-        "-l", vars["len_rt"].get(),
+        "-b", vars["bin"].get(),
+        "-f", vars["factor"].get(),
+        "-s", vars["scale"].get(),
         "-o", vars["out"].get(),
     ]
     util.run_cmd(cmd)
