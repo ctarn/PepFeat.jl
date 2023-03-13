@@ -1,5 +1,7 @@
 module PepFeatAlign
 
+using Statistics
+
 import ArgParse
 import CSV
 import DataFrames
@@ -7,6 +9,7 @@ import MesCore
 import ProgressMeter: @showprogress
 
 prepare(args) = begin
+    b = parse(Float64, args["b"])
     l = parse(Float64, args["l"])
     ε_m = parse(Float64, args["m"]) * 1e-6
     ε_t = parse(Float64, args["t"])
@@ -17,13 +20,12 @@ prepare(args) = begin
     DataFrames.sort!(df_ref, :mz)
     softer = MesCore.exp_softer(parse(Float64, args["s"]))
     out = mkpath(args["o"])
-    return (; df_ref, l, ε_m, ε_t, α, softer, out)
+    return (; df_ref, b, l, ε_m, ε_t, α, softer, out)
 end
 
-align_feature(path; df_ref, l, ε_m, ε_t, α, softer, out) = begin
+align_feature(path; df_ref, b, l, ε_m, ε_t, α, softer, out) = begin
     @info "feature list loading from " * path
     df = path |> CSV.File |> DataFrames.DataFrame
-    DataFrames.sort!(df, :rtime)
     df.matched .= false
     df.match_id .= 0
     df.rtime_aligned .= Inf
@@ -31,24 +33,37 @@ align_feature(path; df_ref, l, ε_m, ε_t, α, softer, out) = begin
     df.delta_rt_aligned .= Inf
     df.delta_mz .= Inf
     df.delta_abu .= Inf
-    Δ = 0.0
-    @showprogress for a in eachrow(df)
-        a.rtime_aligned = a.rtime + Δ
-        if a.rtime_len < l continue end
-        idx = filter(MesCore.argquery_ε(df_ref.mz, a.mz, ε_m)) do i
-            df_ref[i, :z] == a.z && abs(df_ref[i, :rtime] - a.rtime_aligned) ≤ ε_t
+    df.bin = round.(Int, df.rtime ./ b)
+    bin_min, bin_max = extrema(df.bin)
+    bins = [Int[] for _ in (bin_min-1):(bin_max+1)]
+    Δs = zeros(length(bins))
+    Δidx = bin_min - 2
+    df.bin_idx = df.bin .- Δidx
+    @showprogress for (i, idx) in enumerate(df.bin_idx)
+        push!(bins[idx], i)
+    end
+    @showprogress for i_b in 2:(length(bins)-1)
+        δs = Float64[]
+        for i_f in bins[i_b]
+            a = df[i_f, :]
+            a.rtime_aligned = a.rtime + Δs[i_b-1]
+            if a.rtime_len < l continue end
+            idx = filter(MesCore.argquery_ε(df_ref.mz, a.mz, ε_m)) do i
+                df_ref[i, :z] == a.z && abs(df_ref[i, :rtime] - a.rtime_aligned) ≤ ε_t
+            end
+            if length(idx) == 0 continue end
+            _, i = findmin(x -> abs(df_ref[x, :rtime] - a.rtime_aligned), idx)
+            b = df_ref[idx[i], :]
+            δ = b.rtime - a.rtime
+            push!(δs, δ)
+            a.matched = true
+            a.match_id = b.id # may not equal to `i`
+            a.delta_rt = δ
+            a.delta_rt_aligned = b.rtime - a.rtime_aligned
+            a.delta_mz = MesCore.error_ppm(a.mz, b.mz)
+            a.delta_abu = b.inten_apex / a.inten_apex
         end
-        if length(idx) == 0 continue end
-        _, i = findmin(x -> abs(df_ref[x, :rtime] - a.rtime_aligned), idx)
-        b = df_ref[idx[i], :]
-        δ = b.rtime - a.rtime
-        Δ += α * softer(δ - Δ)
-        a.matched = true
-        a.match_id = b.id # may not equal to `i`
-        a.delta_rt = δ
-        a.delta_rt_aligned = b.rtime - a.rtime_aligned
-        a.delta_mz = MesCore.error_ppm(a.mz, b.mz)
-        a.delta_abu = b.inten_apex / a.inten_apex
+        Δs[i_b] = Δs[i_b-1] + (isempty(δs) ? 0 : α * mean(softer.(δs .- Δs[i_b-1])))
     end
     path_out = joinpath(out, splitext(basename(path))[1] * "_aligned.csv")
     @info "saving to " * path_out * "~"
@@ -67,14 +82,22 @@ end
 main() = begin
     settings = ArgParse.ArgParseSettings(prog="PepFeatAlign")
     ArgParse.@add_arg_table! settings begin
+        "-b"
+            help = "moving average step (or, bin size)"
+            metavar = "second"
+            default = "1.0"
         "-f"
-            help = "moving average factor"
+            help = "moving average factor (or, updating rate)"
             metavar = "factor"
             default = "0.1"
         "-s"
             help = "moving average scale"
             metavar = "scale"
             default = "64"
+        "-l"
+            help = "min retention time length"
+            metavar = "second"
+            default = "4.0"
         "-m"
             help = "m/z error"
             metavar = "ppm"
@@ -83,10 +106,6 @@ main() = begin
             help = "max retention time error"
             metavar = "second"
             default = "600.0"
-        "-l"
-            help = "min retention time length"
-            metavar = "second"
-            default = "4.0"
         "-o"
             help = "output directory"
             metavar = "output"
