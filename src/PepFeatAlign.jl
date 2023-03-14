@@ -7,6 +7,9 @@ import CSV
 import DataFrames
 import MesCore
 import ProgressMeter: @showprogress
+import RelocatableFolders: @path
+
+const DIR_DATA = @path joinpath(@__DIR__, "../data")
 
 prepare(args) = begin
     len_rt = parse(Float64, args["l"])
@@ -79,6 +82,26 @@ align_feature(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = beg
     CSV.write(path_out * "~", df_shift)
     mv(path_out * "~", path_out; force=true)
     @info "saved to " * path_out
+
+    df_matched = df[df.matched, :]
+    data = """
+    time = [$(join(string.(df_shift.time), ","))]
+    shift = [$(join(string.(df_shift.shift), ","))]
+    rt_match = [$(join(string.(df_matched.rtime), ","))]
+    delta_rt_match = [$(join(string.(df_matched.delta_rt), ","))]
+    """
+    html = read(joinpath(DIR_DATA, "template.html"), String)
+    html = replace(html,
+        "{{ name }}" => basename(path),
+        "{{ chartjs }}" => read(joinpath(DIR_DATA, "chartjs-4.2.1.js"), String),
+        "{{ data }}" => data,
+    )
+    path_out = joinpath(out, splitext(basename(path))[1] * ".html")
+    @info "saving to " * path_out * "~"
+    open(io -> write(io, html), path_out * "~"; write=true)
+    mv(path_out * "~", path_out; force=true)
+    @info "saved to " * path_out
+    MesCore.open_url(path_out)
 end
 
 main() = begin
