@@ -6,8 +6,8 @@ using Statistics
 
 import ArgParse
 import CSV
-import MesCore
-import PepIso: PepIso, IPV
+import MesMS
+import MesMS: PepIso
 import ProgressMeter: @showprogress
 
 split_and_evaluate(ions, spec, τ_max, ε, V) = begin
@@ -17,17 +17,17 @@ split_and_evaluate(ions, spec, τ_max, ε, V) = begin
     return reduce(vcat, scores)
 end
 
-check_iso(ion, spec, ε, V) = map(m -> !isempty(MesCore.query_ε(spec, ion.mz + m / ion.z, ε)), IPV.ipv_m(ion, V))
+check_iso(ion, spec, ε, V) = map(m -> !isempty(MesMS.query_ε(spec, ion.mz + m / ion.z, ε)), MesMS.ipv_m(ion, V))
 
 build_feature(ions, ε, V) = begin
     apex = argmax(i -> i.x, ions)
     # mass
     mz = sum(i -> i.mz * i.x, ions) / sum(i -> i.x, ions)
     z = ions[begin].z
-    mh = MesCore.mz_to_mh(mz, z)
-    mz_max = IPV.ipv_m(mz * z, V)[argmax(IPV.ipv_w(apex, V))] / z + mz
+    mh = MesMS.mz_to_mh(mz, z)
+    mz_max = MesMS.ipv_m(mz * z, V)[argmax(MesMS.ipv_w(apex, V))] / z + mz
     # retention time
-    rtime, _ = MesCore.calc_centroid(map(i -> i.ms.retention_time, ions), map(i -> i.x, ions))
+    rtime, _ = MesMS.calc_centroid(map(i -> i.ms.retention_time, ions), map(i -> i.x, ions))
     rtime_start, rtime_stop = extrema(i -> i.ms.retention_time, ions)
     rtime_len = rtime_stop - rtime_start
     rtime_apex = apex.ms.retention_time
@@ -54,7 +54,7 @@ build_feature(ions, ε, V) = begin
     iso_last = map(findlast, iso)
     iso_last_max = maximum(iso_last)
     # precursor ion fraction
-    inten_window = sum(p -> p.inten, MesCore.query(apex.ms.peaks, (1 - 2ε) * apex.mz, (1 + 2ε) * IPV.ipv_mz(apex, iso_last_apex, V)))
+    inten_window = sum(p -> p.inten, MesMS.query(apex.ms.peaks, (1 - 2ε) * apex.mz, (1 + 2ε) * MesMS.ipv_mz(apex, iso_last_apex, V)))
     inten_rate = apex.x / inten_window
     return (; mh, mz, z, mz_max,
         rtime, rtime_start, rtime_stop, rtime_len, rtime_apex, fwhm, scan_start, scan_stop, scan_num, scan_apex,
@@ -67,19 +67,19 @@ detect_feature(fname, args) = begin
     τ_exclusion = parse(Float64, args["t"])
     ε = parse(Float64, args["e"]) * 1.0e-6
     gap = parse(Int, args["g"])
-    zs = Vector{Int}(MesCore.parse_range(Int, args["z"]))
+    zs = Vector{Int}(MesMS.parse_range(Int, args["z"]))
     max_n = parse(Int, args["p"])
 
-    V = IPV.build_ipv(args["m"])
+    V = MesMS.build_ipv(args["m"])
 
     @info "loading from " * fname
-    M = MesCore.read_ms1(fname)
+    M = MesMS.read_ms1(fname)
     @info "deisotoping"
     addprocs(parse(Int, args["proc"]))
     @eval @everywhere using PepFeat.PepFeatDetect
     I = @showprogress pmap(M) do m
-        peaks = MesCore.pick_by_inten(m.peaks, max_n)
-        ions = [MesCore.Ion(p.mz, z) for p in peaks for z in zs]
+        peaks = MesMS.pick_by_inten(m.peaks, max_n)
+        ions = [MesMS.Ion(p.mz, z) for p in peaks for z in zs]
         ions = filter(i -> i.mz * i.z < length(V) && PepIso.prefilter(i, peaks, ε, V), ions)
         ions = split_and_evaluate(ions, peaks, τ_exclusion, ε, V)
         ions = [(; ion..., ms=m) for ion in ions]
@@ -109,7 +109,7 @@ main() = begin
         "-m"
             help = "model file"
             metavar = "model"
-            default = joinpath(homedir(), ".PepFeat/IPV.bson")
+            default = joinpath(homedir(), ".MesMS/IPV.bson")
         "-t"
             help = "exclusion threshold"
             metavar = "threshold"

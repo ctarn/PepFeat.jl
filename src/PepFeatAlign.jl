@@ -5,7 +5,7 @@ using Statistics
 import ArgParse
 import CSV
 import DataFrames
-import MesCore
+import MesMS
 import ProgressMeter: @showprogress
 import RelocatableFolders: @path
 
@@ -17,7 +17,7 @@ prepare(args) = begin
     ε_t = parse(Float64, args["t"])
     bin_size = parse(Float64, args["b"])
     α = parse(Float64, args["f"])
-    softer = MesCore.exp_softer(parse(Float64, args["s"]))
+    softer = MesMS.exp_softer(parse(Float64, args["s"]))
     @info "reference loading from " * args["ref"]
     df_ref = args["ref"] |> CSV.File |> DataFrames.DataFrame
     df_ref = df_ref[df_ref.rtime_len .≥ len_rt, :]
@@ -52,7 +52,7 @@ align_feature(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = beg
             a = df[i_f, :]
             a.rtime_aligned = a.rtime + Δs[i_b-1]
             if a.rtime_len < len_rt continue end
-            idx = filter(MesCore.argquery_ε(df_ref.mz, a.mz, ε_m)) do i
+            idx = filter(MesMS.argquery_ε(df_ref.mz, a.mz, ε_m)) do i
                 referable[i] && df_ref[i, :z] == a.z && abs(df_ref[i, :rtime] - a.rtime_aligned) ≤ ε_t
             end
             if isempty(idx) continue end
@@ -65,7 +65,7 @@ align_feature(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = beg
             a.match_id = b.id # may not equal to `i`
             a.delta_rt = δ
             a.delta_rt_aligned = b.rtime - a.rtime_aligned
-            a.delta_mz = MesCore.error_ppm(a.mz, b.mz)
+            a.delta_mz = MesMS.error_ppm(a.mz, b.mz)
             a.delta_abu = b.inten_apex / a.inten_apex
         end
         Δs[i_b] = Δs[i_b-1] + (isempty(δs) ? 0 : α * mean(softer.(δs .- Δs[i_b-1])))
@@ -101,7 +101,7 @@ align_feature(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = beg
     open(io -> write(io, html), path_out * "~"; write=true)
     mv(path_out * "~", path_out; force=true)
     @info "saved to " * path_out
-    MesCore.open_url(path_out)
+    MesMS.open_url(path_out)
 end
 
 main() = begin
