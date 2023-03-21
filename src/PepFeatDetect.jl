@@ -63,25 +63,28 @@ build_feature(ions, ε, V) = begin
     )
 end
 
-detect_feature(fname, args) = begin
-    τ_exclusion = parse(Float64, args["t"])
-    ε = parse(Float64, args["e"]) * 1.0e-6
-    gap = parse(Int, args["g"])
-    zs = Vector{Int}(MesMS.parse_range(Int, args["z"]))
+prepare(args) = begin
     max_n = parse(Int, args["p"])
-
+    zs = Vector{Int}(MesMS.parse_range(Int, args["z"]))
+    τ = parse(Float64, args["t"])
+    ε = parse(Float64, args["e"]) * 1.0e-6
     V = MesMS.build_ipv(args["m"])
+    gap = parse(Int, args["g"])
+    addprocs(parse(Int, args["proc"]))
+    @eval @everywhere using PepFeat.PepFeatDetect
+    out = mkpath(args["o"])
+    return (; max_n, zs, τ, ε, V, gap, out)
+end
 
+detect_feature(fname; max_n, zs, τ, ε, V, gap, out) = begin
     @info "loading from " * fname
     M = MesMS.read_ms1(fname)
     @info "deisotoping"
-    addprocs(parse(Int, args["proc"]))
-    @eval @everywhere using PepFeat.PepFeatDetect
     I = @showprogress pmap(M) do m
         peaks = MesMS.pick_by_inten(m.peaks, max_n)
         ions = [MesMS.Ion(p.mz, z) for p in peaks for z in zs]
         ions = filter(i -> i.mz * i.z < length(V) && PepIso.prefilter(i, peaks, ε, V), ions)
-        ions = split_and_evaluate(ions, peaks, τ_exclusion, ε, V)
+        ions = split_and_evaluate(ions, peaks, τ, ε, V)
         ions = [(; ion..., ms=m) for ion in ions]
     end
     G = PepIso.group_ions(I, gap, ε)
@@ -93,8 +96,7 @@ detect_feature(fname, args) = begin
         build_feature(ions, ε, V)
     end
     F = [(; id=i, f...) for (i, f) in enumerate(F)]
-    mkpath(args["o"])
-    path = joinpath(args["o"], splitext(basename(fname))[1] * ".feature.csv")
+    path = joinpath(out, splitext(basename(fname))[1] * ".feature.csv")
     @info "result saving to " * path
     CSV.write(path, F)
 end
@@ -140,9 +142,10 @@ main() = begin
             required = true
     end
     args = ArgParse.parse_args(settings)
+    sess = prepare(args)
     for path in args["data"], file in readdir(dirname(path))
         if file == basename(path) || (startswith(file, basename(path)) && endswith(file, ".ms1"))
-            detect_feature(joinpath(dirname(path), file), args)
+            detect_feature(joinpath(dirname(path), file); sess...)
         end
     end
 end
