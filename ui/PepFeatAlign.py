@@ -11,11 +11,6 @@ path_autosave = os.path.join(meta.homedir, "autosave_align.task")
 main = ttk.Frame()
 main.grid(column=0, row=0)
 
-if util.is_darwin:
-    path_mono = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono"
-else:
-    path_mono = "mono"
-
 vars_spec = {
     "data": {"type": tk.StringVar, "value": ""},
     "ref": {"type": tk.StringVar, "value": ""},
