@@ -57,24 +57,24 @@ build_feature(ions, ε, V) = begin
 end
 
 prepare(args) = begin
-    max_n = parse(Int, args["p"])
-    zs = Vector{Int}(MesMS.parse_range(Int, args["z"]))
-    τ = parse(Float64, args["t"])
-    ε = parse(Float64, args["e"]) * 1.0e-6
-    V = MesMS.build_ipv(args["m"])
-    gap = parse(Int, args["g"])
     addprocs(parse(Int, args["proc"]))
     @eval @everywhere using PepFeat.PepFeatDetect
-    out = mkpath(args["o"])
-    return (; max_n, zs, τ, ε, V, gap, out)
+    V = MesMS.build_ipv(args["ipv"])
+    n_peak = parse(Int, args["peak"])
+    zs = Vector{Int}(MesMS.parse_range(Int, args["charge"]))
+    ε = parse(Float64, args["error"]) * 1.0e-6
+    τ = parse(Float64, args["thres"])
+    gap = parse(Int, args["gap"])
+    out = mkpath(args["out"])
+    return (; V, n_peak, zs, ε, τ, gap, out)
 end
 
-detect_feature(fname; max_n, zs, τ, ε, V, gap, out) = begin
+detect_feature(fname; V, n_peak, zs, ε, τ, gap, out) = begin
     @info "loading from " * fname
     M = MesMS.read_ms1(fname)
     @info "deisotoping"
     I = @showprogress pmap(M) do m
-        peaks = MesMS.pick_by_inten(m.peaks, max_n)
+        peaks = MesMS.pick_by_inten(m.peaks, n_peak)
         ions = [MesMS.Ion(p.mz, z) for p in peaks for z in zs]
         ions = filter(i -> i.mz * i.z < length(V) && PepIso.prefilter(i, peaks, ε, V), ions)
         ions = PepIso.deisotope(ions, peaks, τ, ε, V; split=true)
@@ -101,31 +101,31 @@ main() = begin
             help = "number of additional worker processes"
             metavar = "n"
             default = "4"
-        "-m"
+        "--ipv"
             help = "model file"
             metavar = "model"
             default = joinpath(homedir(), ".MesMS/IPV.bson")
-        "-t"
-            help = "exclusion threshold"
-            metavar = "threshold"
-            default = "1.0"
-        "-e"
-            help = "m/z error"
-            metavar = "ppm"
-            default = "10.0"
-        "-g"
-            help = "scan gap"
-            metavar = "gap"
-            default = "16"
-        "-p"
+        "--peak", "-p"
             help = "max #peak per scan"
             metavar = "num"
             default = "4000"
-        "-z"
+        "--charge", "-z"
             help = "charge states"
             metavar = "min:max"
             default = "2:6"
-        "-o"
+        "--error", "-e"
+            help = "m/z error"
+            metavar = "ppm"
+            default = "10.0"
+        "--thres", "-t"
+            help = "exclusion threshold"
+            metavar = "threshold"
+            default = "1.0"
+        "--gap", "-g"
+            help = "scan gap"
+            metavar = "gap"
+            default = "16"
+        "--out", "-o"
             help = "output directory"
             metavar = "output"
             default = "./out/"

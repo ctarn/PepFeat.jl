@@ -12,17 +12,17 @@ import RelocatableFolders: @path
 const DIR_DATA = @path joinpath(@__DIR__, "../data")
 
 prepare(args) = begin
-    len_rt = parse(Float64, args["l"])
-    ε_m = parse(Float64, args["m"]) * 1e-6
-    ε_t = parse(Float64, args["t"])
-    bin_size = parse(Float64, args["b"])
-    α = parse(Float64, args["f"])
-    softer = MesMS.exp_softer(parse(Float64, args["s"]))
+    len_rt = parse(Float64, args["len_rt"])
+    ε_m = parse(Float64, args["error_mz"]) * 1e-6
+    ε_t = parse(Float64, args["error_rt"])
+    bin_size = parse(Float64, args["bin"])
+    α = parse(Float64, args["factor"])
+    softer = MesMS.exp_softer(parse(Float64, args["scale"]))
     @info "reference loading from " * args["ref"]
     df_ref = args["ref"] |> CSV.File |> DataFrames.DataFrame
     df_ref = df_ref[df_ref.rtime_len .≥ len_rt, :]
     DataFrames.sort!(df_ref, :mz)
-    out = mkpath(args["o"])
+    out = mkpath(args["out"])
     return (; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out)
 end
 
@@ -107,38 +107,38 @@ end
 main() = begin
     settings = ArgParse.ArgParseSettings(prog="PepFeatAlign")
     ArgParse.@add_arg_table! settings begin
-        "-l"
+        "--len_rt", "-l"
             help = "min retention time length"
             metavar = "second"
             default = "4.0"
-        "-m"
+        "--error_mz", "-m"
             help = "m/z error"
             metavar = "ppm"
             default = "1.0"
-        "-t"
+        "--error_rt", "-t"
             help = "max retention time error"
             metavar = "second"
             default = "600.0"
-        "-b"
+        "--bin", "-b"
             help = "moving average step (or, bin size)"
             metavar = "second"
             default = "1.0"
-        "-f"
+        "--factor", "-f"
             help = "moving average factor (or, updating rate)"
             metavar = "factor"
             default = "0.1"
-        "-s"
+        "--scale", "-s"
             help = "moving average scale"
             metavar = "scale"
             default = "64"
-        "-o"
-            help = "output directory"
-            metavar = "output"
-            default = "./out/"
         "--ref", "--to"
             help = "referred feature list"
             metavar = "reference"
             required = true
+        "--out", "-o"
+            help = "output directory"
+            metavar = "output"
+            default = "./out/"
         "data"
             help = "feature list"
             nargs = '+'
