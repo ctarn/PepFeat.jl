@@ -10,13 +10,6 @@ import MesMS
 import MesMS: PepIso
 import ProgressMeter: @showprogress
 
-split_and_evaluate(ions, spec, τ_max, ε, V) = begin
-    scores = map(zip(PepIso.split_ions(ions, spec, ε, V)...)) do (ions_sub, spec_sub)
-        return PepIso.deisotope(ions_sub, spec_sub, τ_max, ε, V)
-    end
-    return reduce(vcat, scores)
-end
-
 check_iso(ion, spec, ε, V) = map(m -> !isempty(MesMS.query_ε(spec, ion.mz + m / ion.z, ε)), MesMS.ipv_m(ion, V))
 
 build_feature(ions, ε, V) = begin
@@ -84,7 +77,7 @@ detect_feature(fname; max_n, zs, τ, ε, V, gap, out) = begin
         peaks = MesMS.pick_by_inten(m.peaks, max_n)
         ions = [MesMS.Ion(p.mz, z) for p in peaks for z in zs]
         ions = filter(i -> i.mz * i.z < length(V) && PepIso.prefilter(i, peaks, ε, V), ions)
-        ions = split_and_evaluate(ions, peaks, τ, ε, V)
+        ions = PepIso.deisotope(ions, peaks, τ, ε, V; split=true)
         ions = [(; ion..., ms=m) for ion in ions]
     end
     G = PepIso.group_ions(I, gap, ε)
