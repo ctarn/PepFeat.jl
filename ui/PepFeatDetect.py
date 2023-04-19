@@ -18,13 +18,13 @@ else:
 
 vars_spec = {
     "data": {"type": tk.StringVar, "value": ""},
-    "model": {"type": tk.StringVar, "value": os.path.join(meta.homedir, "IPV.bson")},
-    "exclusion": {"type": tk.StringVar, "value": "1.0"},
-    "error": {"type": tk.StringVar, "value": "10.0"},
-    "gap": {"type": tk.StringVar, "value": "16"},
+    "ipv": {"type": tk.StringVar, "value": os.path.join(meta.homedir, "IPV.bson")},
     "peak": {"type": tk.StringVar, "value": "4000"},
     "charge_min": {"type": tk.StringVar, "value": "2"},
     "charge_max": {"type": tk.StringVar, "value": "6"},
+    "error": {"type": tk.StringVar, "value": "10.0"},
+    "exclusion": {"type": tk.StringVar, "value": "1.0"},
+    "gap": {"type": tk.StringVar, "value": "16"},
     "out": {"type": tk.StringVar, "value": ""},
     "pepfeatdetect": {"type": tk.StringVar, "value": util.get_content("PepFeat", "bin", "PepFeatDetect")},
     "thermorawread": {"type": tk.StringVar, "value": util.get_content("ThermoRawRead", "ThermoRawRead.exe", shared=True)},
@@ -56,25 +56,12 @@ ttk.Button(main, text="Select", command=do_select_data).grid(column=2, row=row, 
 row += 1
 
 def do_select_model():
-    path = filedialog.askopenfilename(filetypes=(("Model", "*.bson"), ("All", "*.*")))
-    if len(path) > 0: vars["model"].set(path)
+    path = filedialog.askopenfilename(filetypes=(("IPV", "*.bson"), ("All", "*.*")))
+    if len(path) > 0: vars["ipv"].set(path)
 
-ttk.Label(main, text="Model:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["model"]).grid(column=1, row=row, sticky="WE")
+ttk.Label(main, text="IPV:").grid(column=0, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["ipv"]).grid(column=1, row=row, sticky="WE")
 ttk.Button(main, text="Select", command=do_select_model).grid(column=2, row=row, sticky="W")
-row += 1
-
-ttk.Label(main, text="Exclusion Threshold:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["exclusion"]).grid(column=1, row=row, sticky="WE")
-row += 1
-
-ttk.Label(main, text="Mass Error:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["error"]).grid(column=1, row=row, sticky="WE")
-ttk.Label(main, text="ppm").grid(column=2, row=row, sticky="W")
-row += 1
-
-ttk.Label(main, text="Max. Scan Gap:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["gap"]).grid(column=1, row=row, sticky="WE")
 row += 1
 
 ttk.Label(main, text="Num. of Peaks:").grid(column=0, row=row, sticky="W")
@@ -88,6 +75,19 @@ frm_charge.grid(column=1, row=row, sticky="WE")
 ttk.Entry(frm_charge, textvariable=vars["charge_min"]).grid(column=0, row=0, sticky="WE")
 ttk.Label(frm_charge, text=" - ").grid(column=1, row=0, sticky="WE")
 ttk.Entry(frm_charge, textvariable=vars["charge_max"]).grid(column=2, row=0, sticky="WE")
+row += 1
+
+ttk.Label(main, text="Mass Error:").grid(column=0, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["error"]).grid(column=1, row=row, sticky="WE")
+ttk.Label(main, text="ppm").grid(column=2, row=row, sticky="W")
+row += 1
+
+ttk.Label(main, text="Exclusion Threshold:").grid(column=0, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["exclusion"]).grid(column=1, row=row, sticky="WE")
+row += 1
+
+ttk.Label(main, text="Max. Scan Gap:").grid(column=0, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["gap"]).grid(column=1, row=row, sticky="WE")
 row += 1
 
 def do_select_out():
@@ -111,13 +111,13 @@ def run_pepfeatdetect(path):
         vars["pepfeatdetect"].get(),
         path,
         "--proc", vars["proc"].get(),
-        "-m", vars["model"].get(),
-        "-t", vars["exclusion"].get(),
-        "-e", vars["error"].get(),
-        "-g", vars["gap"].get(),
-        "-p", vars["peak"].get(),
-        "-z", vars["charge_min"].get() + ":" + vars["charge_max"].get(),
-        "-o", vars["out"].get(),
+        "--ipv", vars["ipv"].get(),
+        "--peak", vars["peak"].get(),
+        "--charge", vars["charge_min"].get() + ":" + vars["charge_max"].get(),
+        "--error", vars["error"].get(),
+        "--thres", vars["exclusion"].get(),
+        "--gap", vars["gap"].get(),
+        "--out", vars["out"].get(),
     ]
     util.run_cmd(cmd)
 

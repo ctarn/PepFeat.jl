@@ -100,13 +100,13 @@ def run_pepfeatalign(path):
         vars["pepfeatalign"].get(),
         path,
         "--ref", vars["ref"].get(),
-        "-l", vars["len_rt"].get(),
-        "-m", vars["error_mz"].get(),
-        "-t", vars["error_rt"].get(),
-        "-b", vars["bin"].get(),
-        "-f", vars["factor"].get(),
-        "-s", vars["scale"].get(),
-        "-o", vars["out"].get(),
+        "--len_rt", vars["len_rt"].get(),
+        "--error_mz", vars["error_mz"].get(),
+        "--error_rt", vars["error_rt"].get(),
+        "--bin", vars["bin"].get(),
+        "--factor", vars["factor"].get(),
+        "--scale", vars["scale"].get(),
+        "--out", vars["out"].get(),
     ]
     util.run_cmd(cmd)
 
