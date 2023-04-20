@@ -77,7 +77,7 @@ row += 1
 
 ttk.Label(main, text="Num. of Peaks:").grid(column=0, row=row, sticky="W")
 ttk.Entry(main, textvariable=vars["peak"]).grid(column=1, row=row, sticky="WE")
-ttk.Label(main, text="per Scan").grid(column=2, row=row, sticky="W")
+ttk.Label(main, text="per scan").grid(column=2, row=row, sticky="W")
 row += 1
 
 ttk.Label(main, text="Charge Range:").grid(column=0, row=row, sticky="W")
