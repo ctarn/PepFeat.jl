@@ -12,6 +12,13 @@ skip_rest = False
 
 path_autosave = os.path.join(meta.homedir, "autosave_detect.task")
 
+footnote = """
+Note:
+⧫ Please try something like `Ctrl + A` to select multiple data files.
+⧫ `IPV` (isotopic pattern vectors) can be automatically generated and cached to specified path.
+⧫ Free feel to contact me if you have any questions :).
+"""
+
 main = ttk.Frame()
 main.grid(column=0, row=0)
 
@@ -207,3 +214,5 @@ row += 1
 ttk.Label(main, text="Parallelization:").grid(column=0, row=row, sticky="W")
 ttk.Entry(main, textvariable=vars["proc"]).grid(column=1, row=row, sticky="WE")
 row += 1
+
+ttk.Label(main, text=footnote, justify="left").grid(column=0, row=row, columnspan=3, sticky="WE")

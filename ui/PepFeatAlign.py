@@ -12,6 +12,11 @@ skip_rest = False
 
 path_autosave = os.path.join(meta.homedir, "autosave_align.task")
 
+footnote = """
+Note:
+⧫ This feature is only experimental currently.
+"""
+
 main = ttk.Frame()
 main.grid(column=0, row=0)
 
@@ -170,5 +175,3 @@ ttk.Label(main, text="PepFeatAlign:").grid(column=0, row=row, sticky="W")
 ttk.Entry(main, textvariable=vars["pepfeatalign"]).grid(column=1, row=row, sticky="WE")
 ttk.Button(main, text="Select", command=do_select_pepfeatalign).grid(column=2, row=row, sticky="W")
 row += 1
-
-ttk.Label(main, text="\n\nWARN: this feature is only experimental currently.").grid(column=0, row=row, columnspan=3)
