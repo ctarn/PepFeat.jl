@@ -6,6 +6,10 @@ from tkinter import ttk, filedialog
 import meta
 import util
 
+handles = []
+running = False
+skip_rest = False
+
 path_autosave = os.path.join(meta.homedir, "autosave_align.task")
 
 main = ttk.Frame()
@@ -98,7 +102,6 @@ row += 1
 def run_pepfeatalign(path):
     cmd = [
         vars["pepfeatalign"].get(),
-        path,
         "--ref", vars["ref"].get(),
         "--len_rt", vars["len_rt"].get(),
         "--error_mz", vars["error_mz"].get(),
@@ -107,6 +110,7 @@ def run_pepfeatalign(path):
         "--factor", vars["factor"].get(),
         "--scale", vars["scale"].get(),
         "--out", vars["out"].get(),
+        path,
     ]
     util.run_cmd(cmd)
 
@@ -125,30 +129,46 @@ def do_save():
 
 def do_run():
     btn_run.config(state="disabled")
+    global handles, running, skip_rest
+    running = True
+    skip_rest = False
     do_save()
     for p in vars["data"].get().split(";"):
         run_pepfeatalign(p)
+    running = False
     btn_run.config(state="normal")
+
+def do_stop():
+    global handles, running, skip_rest
+    skip_rest = True
+    for job in handles:
+        if job.poll() is None:
+            job.terminate()
+    running = False
+    handles.clear()
+    btn_run.config(state="normal")
+    print("PepFeatAlign stopped.")
 
 frm_btn = ttk.Frame(main)
 frm_btn.grid(column=0, row=row, columnspan=3)
 ttk.Button(frm_btn, text="Load Task", command=do_load).grid(column=0, row=0, padx=16, pady=8)
 ttk.Button(frm_btn, text="Save Task", command=do_save).grid(column=1, row=0, padx=16, pady=8)
-btn_run = ttk.Button(frm_btn, text="Save & Run", command=lambda: threading.Thread(target=do_run).start())
+btn_run = ttk.Button(frm_btn, text="Run Task", command=lambda: threading.Thread(target=do_run).start())
 btn_run.grid(column=2, row=0, padx=16, pady=8)
+ttk.Button(frm_btn, text="Stop Task", command=lambda: threading.Thread(target=do_stop).start()).grid(column=3, row=0, padx=16, pady=8)
 row += 1
 
 ttk.Separator(main, orient=tk.HORIZONTAL).grid(column=0, row=row, columnspan=3, sticky="WE")
 ttk.Label(main, text="Advanced Configuration").grid(column=0, row=row, columnspan=3)
 row += 1
 
-def do_select_pepfeatdetect():
+def do_select_pepfeatalign():
     path = filedialog.askopenfilename()
     if len(path) > 0: vars["pepfeatalign"].set(path)
 
 ttk.Label(main, text="PepFeatAlign:").grid(column=0, row=row, sticky="W")
 ttk.Entry(main, textvariable=vars["pepfeatalign"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_pepfeatdetect).grid(column=2, row=row, sticky="W")
+ttk.Button(main, text="Select", command=do_select_pepfeatalign).grid(column=2, row=row, sticky="W")
 row += 1
 
 ttk.Label(main, text="\n\nWARN: this feature is only experimental currently.").grid(column=0, row=row, columnspan=3)

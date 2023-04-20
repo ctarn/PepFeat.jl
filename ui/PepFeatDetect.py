@@ -6,6 +6,10 @@ from tkinter import ttk, filedialog
 import meta
 import util
 
+handles = []
+running = False
+skip_rest = False
+
 path_autosave = os.path.join(meta.homedir, "autosave_detect.task")
 
 main = ttk.Frame()
@@ -103,13 +107,12 @@ def run_thermorawread(data, out):
     cmd = [vars["thermorawread"].get(), data, out]
     if not util.is_windows:
         cmd = [vars["mono"].get()] + cmd
-    util.run_cmd(cmd)
+    util.run_cmd(cmd, handles, skip_rest)
     return os.path.join(out, os.path.splitext(os.path.basename(data))[0] + ".ms1")
 
 def run_pepfeatdetect(path):
     cmd = [
         vars["pepfeatdetect"].get(),
-        path,
         "--proc", vars["proc"].get(),
         "--ipv", vars["ipv"].get(),
         "--peak", vars["peak"].get(),
@@ -118,8 +121,9 @@ def run_pepfeatdetect(path):
         "--thres", vars["exclusion"].get(),
         "--gap", vars["gap"].get(),
         "--out", vars["out"].get(),
+        path,
     ]
-    util.run_cmd(cmd)
+    util.run_cmd(cmd, handles, skip_rest)
 
 def do_load():
     path = filedialog.askopenfilename(filetypes=(("Configuration", "*.task"), ("All", "*.*")))
@@ -136,20 +140,36 @@ def do_save():
 
 def do_run():
     btn_run.config(state="disabled")
+    global handles, running, skip_rest
+    running = True
+    skip_rest = False
     do_save()
     for p in vars["data"].get().split(";"):
         ext = os.path.splitext(p)[1].lower()
         if ext == ".raw":
             p = run_thermorawread(p, vars["out"].get())
         run_pepfeatdetect(p)
+    running = False
     btn_run.config(state="normal")
+
+def do_stop():
+    global handles, running, skip_rest
+    skip_rest = True
+    for job in handles:
+        if job.poll() is None:
+            job.terminate()
+    running = False
+    handles.clear()
+    btn_run.config(state="normal")
+    print("PepFeatDetect stopped.")
 
 frm_btn = ttk.Frame(main)
 frm_btn.grid(column=0, row=row, columnspan=3)
 ttk.Button(frm_btn, text="Load Task", command=do_load).grid(column=0, row=0, padx=16, pady=8)
 ttk.Button(frm_btn, text="Save Task", command=do_save).grid(column=1, row=0, padx=16, pady=8)
-btn_run = ttk.Button(frm_btn, text="Save & Run", command=lambda: threading.Thread(target=do_run).start())
+btn_run = ttk.Button(frm_btn, text="Run Task", command=lambda: threading.Thread(target=do_run).start())
 btn_run.grid(column=2, row=0, padx=16, pady=8)
+ttk.Button(frm_btn, text="Stop Task", command=lambda: threading.Thread(target=do_stop).start()).grid(column=3, row=0, padx=16, pady=8)
 row += 1
 
 ttk.Separator(main, orient=tk.HORIZONTAL).grid(column=0, row=row, columnspan=3, sticky="WE")

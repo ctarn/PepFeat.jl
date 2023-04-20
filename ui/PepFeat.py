@@ -32,12 +32,20 @@ ttk.Label(main, text=meta.copyright, justify="center").grid(column=0, row=row)
 sys.stdout = util.Console(console)
 sys.stderr = util.Console(console)
 if getattr(sys, 'frozen', False):
-    threading.Thread(target=lambda: util.show_headline(meta.server, main, 1)).start()
+    threading.Thread(target=lambda: util.show_headline(meta.server, main)).start()
 
 import PepFeatDetect
 notebook.add(PepFeatDetect.main, text="Feature Detection")
 
 import PepFeatAlign
 notebook.add(PepFeatAlign.main, text="Feature Alignment")
+
+def on_delete():
+    if (not (PepFeatDetect.running or PepFeatAlign.running)) or tk.messagebox.askokcancel("Quit", "Task running. Quit now?"):
+        PepFeatDetect.do_stop()
+        PepFeatAlign.do_stop()
+        win.destroy()
+
+win.protocol("WM_DELETE_WINDOW", on_delete)
 
 tk.mainloop()
