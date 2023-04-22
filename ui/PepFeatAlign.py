@@ -117,7 +117,7 @@ def run_pepfeatalign(path):
         "--out", vars["out"].get(),
         path,
     ]
-    util.run_cmd(cmd)
+    util.run_cmd(cmd, handles, skip_rest)
 
 def do_load():
     path = filedialog.askopenfilename(filetypes=(("Configuration", "*.task"), ("All", "*.*")))
