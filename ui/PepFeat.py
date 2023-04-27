@@ -11,10 +11,9 @@ import util
 
 os.makedirs(meta.homedir, exist_ok=True)
 
-win = tk.Tk()
-win.title(meta.name)
-win.iconphoto(True, tk.PhotoImage(file=util.get_content(f"{meta.name}.png", shared=True)))
-win.resizable(False, False)
+pos = [0.0, 0.0]
+win = util.create_window(pos)
+
 main = ttk.Frame(win)
 main.grid(column=0, row=0, padx=16, pady=8)
 
@@ -42,12 +41,14 @@ notebook.add(PepFeatDetect.main, text="Feature Detection")
 import PepFeatAlign
 notebook.add(PepFeatAlign.main, text="Feature Alignment")
 
-def on_delete():
+def on_exit():
     if (not (PepFeatDetect.running or PepFeatAlign.running)) or tk.messagebox.askokcancel("Quit", "Task running. Quit now?"):
         PepFeatDetect.do_stop()
         PepFeatAlign.do_stop()
         win.destroy()
 
-win.protocol("WM_DELETE_WINDOW", on_delete)
+ttk.Button(main, text="×", command=on_exit).grid(column=1, row=0, sticky="E")
+
+util.center_window(win)
 
 tk.mainloop()
