@@ -20,7 +20,7 @@ Note:
 """
 
 main = ttk.Frame()
-main.grid(column=0, row=0)
+main.grid(sticky="SNWE")
 
 if util.is_darwin:
     path_mono = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono"
@@ -48,6 +48,7 @@ util.load_task(path_autosave, vars)
 row = 0
 ttk.Label(main, width=20 if util.is_windows else 16).grid(column=0, row=row)
 ttk.Label(main, width=80 if util.is_windows else 60).grid(column=1, row=row)
+ttk.Label(main, width=12 if util.is_windows else 10).grid(column=2, row=row)
 
 def do_select_data():
     filetypes = (("MS1", "*.ms1"), ("RAW", "*.raw"), ("All", "*.*"))
@@ -62,8 +63,8 @@ def do_select_data():
         vars["out"].set(os.path.join(os.path.dirname(files[0]), "out"))
 
 ttk.Label(main, text="Data:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["data"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_data).grid(column=2, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["data"]).grid(column=1, row=row, **util.sty_entry)
+ttk.Button(main, text="Select", command=do_select_data).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 def do_select_model():
@@ -71,34 +72,34 @@ def do_select_model():
     if len(path) > 0: vars["ipv"].set(path)
 
 ttk.Label(main, text="IPV:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["ipv"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_model).grid(column=2, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["ipv"]).grid(column=1, row=row, **util.sty_entry)
+ttk.Button(main, text="Select", command=do_select_model).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 ttk.Label(main, text="Num. of Peaks:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["peak"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["peak"]).grid(column=1, row=row, **util.sty_entry)
 ttk.Label(main, text="per scan").grid(column=2, row=row, sticky="W")
 row += 1
 
 ttk.Label(main, text="Charge Range:").grid(column=0, row=row, sticky="W")
 frm_charge = ttk.Frame(main)
 frm_charge.grid(column=1, row=row, sticky="WE")
-ttk.Entry(frm_charge, textvariable=vars["charge_min"]).grid(column=0, row=0, sticky="WE")
+ttk.Entry(frm_charge, textvariable=vars["charge_min"]).grid(column=0, row=0, **util.sty_entry)
 ttk.Label(frm_charge, text=" - ").grid(column=1, row=0, sticky="WE")
-ttk.Entry(frm_charge, textvariable=vars["charge_max"]).grid(column=2, row=0, sticky="WE")
+ttk.Entry(frm_charge, textvariable=vars["charge_max"]).grid(column=2, row=0, **util.sty_entry)
 row += 1
 
 ttk.Label(main, text="Mass Error:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["error"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["error"]).grid(column=1, row=row, **util.sty_entry)
 ttk.Label(main, text="ppm").grid(column=2, row=row, sticky="W")
 row += 1
 
 ttk.Label(main, text="Exclusion Threshold:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["exclusion"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["exclusion"]).grid(column=1, row=row, **util.sty_entry)
 row += 1
 
 ttk.Label(main, text="Max. Scan Gap:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["gap"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["gap"]).grid(column=1, row=row, **util.sty_entry)
 row += 1
 
 def do_select_out():
@@ -106,8 +107,8 @@ def do_select_out():
     if len(path) > 0: vars["out"].set(path)
 
 ttk.Label(main, text="Output Directory:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["out"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_out).grid(column=2, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["out"]).grid(column=1, row=row, **util.sty_entry)
+ttk.Button(main, text="Select", command=do_select_out).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 def run_thermorawread(data, out):
@@ -188,8 +189,8 @@ def do_select_pepfeatdetect():
     if len(path) > 0: vars["pepfeatdetect"].set(path)
 
 ttk.Label(main, text="PepFeatDetect:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["pepfeatdetect"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_pepfeatdetect).grid(column=2, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["pepfeatdetect"]).grid(column=1, row=row, **util.sty_entry)
+ttk.Button(main, text="Select", command=do_select_pepfeatdetect).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 def do_select_thermorawread():
@@ -197,8 +198,8 @@ def do_select_thermorawread():
     if len(path) > 0: vars["thermorawread"].set(path)
 
 ttk.Label(main, text="ThermoRawRead:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["thermorawread"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_thermorawread).grid(column=2, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["thermorawread"]).grid(column=1, row=row, **util.sty_entry)
+ttk.Button(main, text="Select", command=do_select_thermorawread).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 def do_select_mono():
@@ -207,12 +208,12 @@ def do_select_mono():
 
 if not util.is_windows:
     ttk.Label(main, text="Mono Runtime:").grid(column=0, row=row, sticky="W")
-    ttk.Entry(main, textvariable=vars["mono"]).grid(column=1, row=row, sticky="WE")
-    ttk.Button(main, text="Select", command=do_select_mono).grid(column=2, row=row, sticky="W")
+    ttk.Entry(main, textvariable=vars["mono"]).grid(column=1, row=row, **util.sty_entry)
+    ttk.Button(main, text="Select", command=do_select_mono).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 ttk.Label(main, text="Parallelization:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["proc"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["proc"]).grid(column=1, row=row, **util.sty_entry)
 row += 1
 
 ttk.Label(main, text=footnote, justify="left").grid(column=0, row=row, columnspan=3, sticky="WE")

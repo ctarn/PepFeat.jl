@@ -18,7 +18,7 @@ Note:
 """
 
 main = ttk.Frame()
-main.grid(column=0, row=0)
+main.grid(sticky="SNWE")
 
 vars_spec = {
     "data": {"type": tk.StringVar, "value": ""},
@@ -38,6 +38,7 @@ util.load_task(path_autosave, vars)
 row = 0
 ttk.Label(main, width=20 if util.is_windows else 16).grid(column=0, row=row)
 ttk.Label(main, width=80 if util.is_windows else 60).grid(column=1, row=row)
+ttk.Label(main, width=12 if util.is_windows else 10).grid(column=2, row=row)
 
 def do_select_data():
     filetypes = (("Feature List", "*.csv"), ("All", "*.*"))
@@ -52,8 +53,8 @@ def do_select_data():
         vars["out"].set(os.path.join(os.path.dirname(files[0]), "out"))
 
 ttk.Label(main, text="Feature List:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["data"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_data).grid(column=2, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["data"]).grid(column=1, row=row, **util.sty_entry)
+ttk.Button(main, text="Select", command=do_select_data).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 def do_select_ref():
@@ -62,36 +63,36 @@ def do_select_ref():
     if len(path) > 0: vars["ref"].set(path)
 
 ttk.Label(main, text="Referred List:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["ref"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_ref).grid(column=2, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["ref"]).grid(column=1, row=row, **util.sty_entry)
+ttk.Button(main, text="Select", command=do_select_ref).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 ttk.Label(main, text="Min RTime Length:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["len_rt"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["len_rt"]).grid(column=1, row=row, **util.sty_entry)
 ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
 row += 1
 
 ttk.Label(main, text="Mass Error:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["error_mz"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["error_mz"]).grid(column=1, row=row, **util.sty_entry)
 ttk.Label(main, text="ppm").grid(column=2, row=row, sticky="W")
 row += 1
 
 ttk.Label(main, text="Max RTime Error:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["error_rt"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["error_rt"]).grid(column=1, row=row, **util.sty_entry)
 ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
 row += 1
 
 ttk.Label(main, text="Moving Average Step:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["bin"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["bin"]).grid(column=1, row=row, **util.sty_entry)
 ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
 row += 1
 
 ttk.Label(main, text="Moving Average Factor:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["factor"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["factor"]).grid(column=1, row=row, **util.sty_entry)
 row += 1
 
 ttk.Label(main, text="Moving Average Scale:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["scale"]).grid(column=1, row=row, sticky="WE")
+ttk.Entry(main, textvariable=vars["scale"]).grid(column=1, row=row, **util.sty_entry)
 ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
 row += 1
 
@@ -100,8 +101,8 @@ def do_select_out():
     if len(path) > 0: vars["out"].set(path)
 
 ttk.Label(main, text="Output Directory:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["out"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_out).grid(column=2, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["out"]).grid(column=1, row=row, **util.sty_entry)
+ttk.Button(main, text="Select", command=do_select_out).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 def run_pepfeatalign(path):
@@ -172,6 +173,6 @@ def do_select_pepfeatalign():
     if len(path) > 0: vars["pepfeatalign"].set(path)
 
 ttk.Label(main, text="PepFeatAlign:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["pepfeatalign"]).grid(column=1, row=row, sticky="WE")
-ttk.Button(main, text="Select", command=do_select_pepfeatalign).grid(column=2, row=row, sticky="W")
+ttk.Entry(main, textvariable=vars["pepfeatalign"]).grid(column=1, row=row, **util.sty_entry)
+ttk.Button(main, text="Select", command=do_select_pepfeatalign).grid(column=2, row=row, **util.sty_button)
 row += 1
