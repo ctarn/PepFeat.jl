@@ -2,7 +2,7 @@ import os
 import sys
 import threading
 import tkinter as tk
-from tkinter import ttk, scrolledtext
+from tkinter import ttk, messagebox, scrolledtext
 
 import ttkbootstrap
 
@@ -40,7 +40,7 @@ import PepFeatAlign
 notebook.add(PepFeatAlign.main, text="Feature Alignment")
 
 def on_exit():
-    if (not (PepFeatDetect.running or PepFeatAlign.running)) or tk.messagebox.askokcancel("Quit", "Task running. Quit now?"):
+    if (not (PepFeatDetect.running or PepFeatAlign.running)) or messagebox.askokcancel("Quit", "Task running. Quit now?"):
         PepFeatDetect.do_stop()
         PepFeatAlign.do_stop()
         win.destroy()
