@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 name = "PepFeat"
-version = "1.1.3"
+version = "1.2.0"
 author = "Tarn Yeong Ching"
 url = f"http://{name.lower()}.ctarn.io"
 server = f"http://api.ctarn.io/{name}/{version}"
