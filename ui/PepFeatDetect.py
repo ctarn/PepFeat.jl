@@ -14,13 +14,14 @@ path_autosave = os.path.join(meta.homedir, "autosave_detect.task")
 
 footnote = """
 Note:
-⧫ Please try something like `Ctrl + A` to select multiple data files.
-⧫ `IPV` (isotopic pattern vectors) can be automatically generated and cached to specified path.
+⧫ The `IPV` (isotopic pattern vectors) can be automatically generated and cached to specified path.
+⧫ Drag the border to move the window; click `x` to close it.
+⧫ Select multiple data files using something like `Ctrl + A`.
 ⧫ Free feel to contact me if you have any questions :).
 """
 
 main = ttk.Frame()
-main.grid(sticky="SNWE")
+main.pack(fill="both")
 
 if util.is_darwin:
     path_mono = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/mono"
@@ -67,13 +68,13 @@ ttk.Entry(main, textvariable=vars["data"]).grid(column=1, row=row, **util.sty_en
 ttk.Button(main, text="Select", command=do_select_data).grid(column=2, row=row, **util.sty_button)
 row += 1
 
-def do_select_model():
+def do_select_ipv():
     path = filedialog.askopenfilename(filetypes=(("IPV", "*.bson"), ("All", "*.*")))
     if len(path) > 0: vars["ipv"].set(path)
 
 ttk.Label(main, text="IPV:").grid(column=0, row=row, sticky="W")
 ttk.Entry(main, textvariable=vars["ipv"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_model).grid(column=2, row=row, **util.sty_button)
+ttk.Button(main, text="Select", command=do_select_ipv).grid(column=2, row=row, **util.sty_button)
 row += 1
 
 ttk.Label(main, text="Num. of Peaks:").grid(column=0, row=row, sticky="W")
@@ -83,10 +84,10 @@ row += 1
 
 ttk.Label(main, text="Charge Range:").grid(column=0, row=row, sticky="W")
 frm_charge = ttk.Frame(main)
-frm_charge.grid(column=1, row=row, sticky="WE")
-ttk.Entry(frm_charge, textvariable=vars["charge_min"]).grid(column=0, row=0, **util.sty_entry)
-ttk.Label(frm_charge, text=" - ").grid(column=1, row=0, sticky="WE")
-ttk.Entry(frm_charge, textvariable=vars["charge_max"]).grid(column=2, row=0, **util.sty_entry)
+frm_charge.grid(column=1, row=row, **util.sty_entry)
+ttk.Entry(frm_charge, textvariable=vars["charge_min"]).pack(side="left", fill="x", expand=True)
+ttk.Label(frm_charge, text="-").pack(side="left")
+ttk.Entry(frm_charge, textvariable=vars["charge_max"]).pack(side="left", fill="x", expand=True)
 row += 1
 
 ttk.Label(main, text="Mass Error:").grid(column=0, row=row, sticky="W")

@@ -12,13 +12,8 @@ skip_rest = False
 
 path_autosave = os.path.join(meta.homedir, "autosave_align.task")
 
-footnote = """
-Note:
-⧫ This feature is only experimental currently.
-"""
-
 main = ttk.Frame()
-main.grid(sticky="SNWE")
+main.pack(fill="both")
 
 vars_spec = {
     "data": {"type": tk.StringVar, "value": ""},
@@ -67,7 +62,7 @@ ttk.Entry(main, textvariable=vars["ref"]).grid(column=1, row=row, **util.sty_ent
 ttk.Button(main, text="Select", command=do_select_ref).grid(column=2, row=row, **util.sty_button)
 row += 1
 
-ttk.Label(main, text="Min RTime Length:").grid(column=0, row=row, sticky="W")
+ttk.Label(main, text="Min. RTime Length:").grid(column=0, row=row, sticky="W")
 ttk.Entry(main, textvariable=vars["len_rt"]).grid(column=1, row=row, **util.sty_entry)
 ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
 row += 1
@@ -77,7 +72,7 @@ ttk.Entry(main, textvariable=vars["error_mz"]).grid(column=1, row=row, **util.st
 ttk.Label(main, text="ppm").grid(column=2, row=row, sticky="W")
 row += 1
 
-ttk.Label(main, text="Max RTime Error:").grid(column=0, row=row, sticky="W")
+ttk.Label(main, text="Max. RTime Error:").grid(column=0, row=row, sticky="W")
 ttk.Entry(main, textvariable=vars["error_rt"]).grid(column=1, row=row, **util.sty_entry)
 ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
 row += 1
