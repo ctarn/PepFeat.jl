@@ -4,7 +4,7 @@
 <title>PepFeat</title>
 <style>
 * {
-    font-family: Helvetica, Arial, sans-serif;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: dimgrey;
 }
 
@@ -42,6 +42,18 @@ footer {
     margin: 16px auto;
     display: flex;
     justify-content: space-around;
+}
+
+header {
+    height: 64px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+header img {
+    height: 100%;
 }
 
 div.ui {
@@ -82,7 +94,7 @@ div.release section ol {
 </head>
 <body>
 <div class="wrapper">
-<header><h1>PepFeat</h1></header>
+<header><img src="fig/PepFeat.svg" alt="logo"/><h1>PepFeat</h1></header>
 <main>
 PepFeat is used to detect peptide features from LC-MS map.
 It is based on <a href="http://peppre.ctarn.io">PepPre</a>.
@@ -93,7 +105,7 @@ It is based on <a href="http://peppre.ctarn.io">PepPre</a>.
 </ul>
 
 <h2>Release</h2>
-<div class="ui"><img src="fig/PepFeat_ui.png" /></div>
+<div class="ui"><img src="fig/PepFeat_ui.png" alt="ui"/></div>
 <div class="release"><section><time>2023-5-7</time>
 <h4>PepFeat 1.2.0</h4>
 <div>
