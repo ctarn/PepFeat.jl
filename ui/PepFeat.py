@@ -42,6 +42,9 @@ notebook.add(PepFeatDetect.main, text="Feature Detection")
 import PepFeatAlign
 notebook.add(PepFeatAlign.main, text="Feature Alignment")
 
+import citation
+notebook.add(citation.main, text="Citation")
+
 def on_exit():
     if (not any([PepFeatDetect.running, PepFeatAlign.running]) or
         messagebox.askokcancel("Quit", "Task running. Quit now?")):
