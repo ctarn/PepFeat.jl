@@ -6,7 +6,7 @@ import meta
 main = ttk.Frame()
 main.pack(fill="both")
 
-ttk.Label(main, text="Please cite the following work if you use PepPre in your work.", justify="left").pack(fill="x", ipadx=4, ipady=16)
+ttk.Label(main, text=f"Please cite the following work if you use {meta.name} in your work.", justify="left").pack(fill="x", ipadx=4, ipady=16)
 
 ttk.Label(main, text="BibTeX").pack()
 bib = tk.Text(main, height=12)
