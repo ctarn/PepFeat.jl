@@ -1,6 +1,5 @@
 module PepFeatDetect
 
-using Base: Filesystem
 using Distributed
 using Statistics
 
