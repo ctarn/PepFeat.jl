@@ -85,10 +85,10 @@ align_feature(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = beg
 
     df_matched = df[df.matched, :]
     data = """
-    time = [$(join(string.(df_shift.time), ","))]
-    shift = [$(join(string.(df_shift.shift), ","))]
-    rt_match = [$(join(string.(df_matched.rtime), ","))]
-    delta_rt_match = [$(join(string.(df_matched.delta_rt), ","))]
+const TIME = [$(join(string.(df_shift.time), ","))]
+const SHIFT = [$(join(string.(df_shift.shift), ","))]
+const RT_MATCH = [$(join(string.(df_matched.rtime), ","))]
+const DELTA_RT_MATCH = [$(join(string.(df_matched.delta_rt), ","))]
     """
     html = read(joinpath(DIR_DATA, "template.html"), String)
     html = replace(html,
