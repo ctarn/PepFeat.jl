@@ -46,9 +46,7 @@ vars = {k: v["type"](value=v["value"]) for k, v in vars_spec.items()}
 util.load_task(path_autosave, vars)
 
 row = 0
-ttk.Label(main, width=20 if util.is_windows else 16).grid(column=0, row=row)
-ttk.Label(main, width=80 if util.is_windows else 60).grid(column=1, row=row)
-ttk.Label(main, width=12 if util.is_windows else 10).grid(column=2, row=row)
+util.init_form(main)
 
 def do_select_data():
     filetypes = (("MS1", "*.ms1"), ("RAW", "*.raw"), ("All", "*.*"))
@@ -62,53 +60,32 @@ def do_select_data():
     if len(vars["data"].get()) > 0 and len(vars["out"].get()) == 0:
         vars["out"].set(os.path.join(os.path.dirname(files[0]), "out"))
 
-ttk.Label(main, text="Data:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["data"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_data).grid(column=2, row=row, **util.sty_button)
+util.add_entry(main, row, "Data:", vars["data"], "Select", do_select_data)
 row += 1
 
-def do_select_ipv():
-    path = filedialog.askopenfilename(filetypes=(("IPV", "*.bson"), ("All", "*.*")))
-    if len(path) > 0: vars["ipv"].set(path)
-
-ttk.Label(main, text="IPV:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["ipv"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_ipv).grid(column=2, row=row, **util.sty_button)
+t = (("IPV", "*.bson"), ("All", "*.*"))
+util.add_entry(main, row, "IPV:", vars["ipv"], "Select", util.askfile(vars["ipv"], filetypes=t))
 row += 1
 
-ttk.Label(main, text="Num. of Peaks:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["peak"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Label(main, text="per scan").grid(column=2, row=row, sticky="W")
+util.add_entry(main, row, "Num. of Peaks:", vars["peak"], "per scan")
 row += 1
 
-ttk.Label(main, text="Charge Range:").grid(column=0, row=row, sticky="W")
-frm_charge = ttk.Frame(main)
-frm_charge.grid(column=1, row=row, **util.sty_entry)
-ttk.Entry(frm_charge, textvariable=vars["charge_min"]).pack(side="left", fill="x", expand=True)
-ttk.Label(frm_charge, text="-").pack(side="left")
-ttk.Entry(frm_charge, textvariable=vars["charge_max"]).pack(side="left", fill="x", expand=True)
+_, f, _ = util.add_entry(main, row, "Charge Range:", ttk.Frame(main))
+ttk.Entry(f, textvariable=vars["charge_min"]).pack(side="left", fill="x", expand=True)
+ttk.Label(f, text="-").pack(side="left")
+ttk.Entry(f, textvariable=vars["charge_max"]).pack(side="left", fill="x", expand=True)
 row += 1
 
-ttk.Label(main, text="Mass Error:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["error"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Label(main, text="ppm").grid(column=2, row=row, sticky="W")
+util.add_entry(main, row, "Mass Error:", vars["error"], "ppm")
 row += 1
 
-ttk.Label(main, text="Exclusion Threshold:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["exclusion"]).grid(column=1, row=row, **util.sty_entry)
+util.add_entry(main, row, "Exclusion Threshold:", vars["exclusion"])
 row += 1
 
-ttk.Label(main, text="Max. Scan Gap:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["gap"]).grid(column=1, row=row, **util.sty_entry)
+util.add_entry(main, row, "Max. Scan Gap:", vars["gap"])
 row += 1
 
-def do_select_out():
-    path = filedialog.askdirectory()
-    if len(path) > 0: vars["out"].set(path)
-
-ttk.Label(main, text="Output Directory:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["out"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_out).grid(column=2, row=row, **util.sty_button)
+util.add_entry(main, row, "Output Directory:", vars["out"], "Select", util.askdir(vars["out"]))
 row += 1
 
 def run_thermorawread(data, out):
@@ -118,7 +95,7 @@ def run_thermorawread(data, out):
     util.run_cmd(cmd, handles, skip_rest)
     return os.path.join(out, os.path.splitext(os.path.basename(data))[0] + ".ms1")
 
-def run_pepfeatdetect(path):
+def run_pepfeatdetect(paths):
     cmd = [
         vars["pepfeatdetect"].get(),
         "--proc", vars["proc"].get(),
@@ -129,7 +106,7 @@ def run_pepfeatdetect(path):
         "--thres", vars["exclusion"].get(),
         "--gap", vars["gap"].get(),
         "--out", vars["out"].get(),
-        path,
+        *paths,
     ]
     util.run_cmd(cmd, handles, skip_rest)
 
@@ -152,11 +129,13 @@ def do_run():
     running = True
     skip_rest = False
     do_save()
+    paths = []
     for p in vars["data"].get().split(";"):
         ext = os.path.splitext(p)[1].lower()
         if ext == ".raw":
             p = run_thermorawread(p, vars["out"].get())
-        run_pepfeatdetect(p)
+        paths.append(p)
+    run_pepfeatdetect(paths)
     running = False
     btn_run.config(state="normal")
 
@@ -180,40 +159,21 @@ btn_run.grid(column=2, row=0, padx=16, pady=8)
 ttk.Button(frm_btn, text="Stop Task", command=lambda: threading.Thread(target=do_stop).start()).grid(column=3, row=0, padx=16, pady=8)
 row += 1
 
-ttk.Separator(main, orient=tk.HORIZONTAL).grid(column=0, row=row, columnspan=3, sticky="WE")
+ttk.Separator(main, orient=tk.HORIZONTAL).grid(column=0, row=row, columnspan=3, sticky="EW")
 ttk.Label(main, text="Advanced Configuration").grid(column=0, row=row, columnspan=3)
 row += 1
 
-def do_select_pepfeatdetect():
-    path = filedialog.askopenfilename()
-    if len(path) > 0: vars["pepfeatdetect"].set(path)
-
-ttk.Label(main, text="PepFeatDetect:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["pepfeatdetect"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_pepfeatdetect).grid(column=2, row=row, **util.sty_button)
+util.add_entry(main, row, "PepFeatDetect:", vars["pepfeatdetect"], "Select", util.askfile(vars["pepfeatdetect"]))
 row += 1
 
-def do_select_thermorawread():
-    path = filedialog.askopenfilename()
-    if len(path) > 0: vars["thermorawread"].set(path)
-
-ttk.Label(main, text="ThermoRawRead:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["thermorawread"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_thermorawread).grid(column=2, row=row, **util.sty_button)
+util.add_entry(main, row, "ThermoRawRead:", vars["thermorawread"], "Select", util.askfile(vars["thermorawread"]))
 row += 1
-
-def do_select_mono():
-    path = filedialog.askopenfilename()
-    if len(path) > 0: vars["mono"].set(path)
 
 if not util.is_windows:
-    ttk.Label(main, text="Mono Runtime:").grid(column=0, row=row, sticky="W")
-    ttk.Entry(main, textvariable=vars["mono"]).grid(column=1, row=row, **util.sty_entry)
-    ttk.Button(main, text="Select", command=do_select_mono).grid(column=2, row=row, **util.sty_button)
+    util.add_entry(main, row, "Mono Runtime:", vars["mono"], "Select", util.askfile(vars["mono"]))
     row += 1
 
-ttk.Label(main, text="Parallelization:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["proc"]).grid(column=1, row=row, **util.sty_entry)
+util.add_entry(main, row, "Parallelization:", vars["proc"])
 row += 1
 
-ttk.Label(main, text=footnote, justify="left").grid(column=0, row=row, columnspan=3, sticky="WE")
+ttk.Label(main, text=footnote, justify="left").grid(column=0, row=row, columnspan=3, sticky="EW")

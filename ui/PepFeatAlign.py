@@ -31,13 +31,11 @@ vars = {k: v["type"](value=v["value"]) for k, v in vars_spec.items()}
 util.load_task(path_autosave, vars)
 
 row = 0
-ttk.Label(main, width=20 if util.is_windows else 16).grid(column=0, row=row)
-ttk.Label(main, width=80 if util.is_windows else 60).grid(column=1, row=row)
-ttk.Label(main, width=12 if util.is_windows else 10).grid(column=2, row=row)
+util.init_form(main)
 
+t = (("Feature List", "*.csv"), ("All", "*.*"))
 def do_select_data():
-    filetypes = (("Feature List", "*.csv"), ("All", "*.*"))
-    files = filedialog.askopenfilenames(filetypes=filetypes)
+    files = filedialog.askopenfilenames(filetypes=t)
     if len(files) == 0:
         return None
     elif len(files) > 1:
@@ -47,60 +45,34 @@ def do_select_data():
     if len(vars["data"].get()) > 0 and len(vars["out"].get()) == 0:
         vars["out"].set(os.path.join(os.path.dirname(files[0]), "out"))
 
-ttk.Label(main, text="Feature List:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["data"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_data).grid(column=2, row=row, **util.sty_button)
+util.add_entry(main, row, "Feature List:", vars["data"], "Select", do_select_data)
 row += 1
 
-def do_select_ref():
-    filetypes = (("Feature List", "*.csv"), ("All", "*.*"))
-    path = filedialog.askopenfilename(filetypes=filetypes)
-    if len(path) > 0: vars["ref"].set(path)
-
-ttk.Label(main, text="Referred List:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["ref"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_ref).grid(column=2, row=row, **util.sty_button)
+util.add_entry(main, row, "Referred List:", vars["ref"], "Select", util.askfile(vars["ref"], filetypes=t))
 row += 1
 
-ttk.Label(main, text="Min. RTime Length:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["len_rt"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
+util.add_entry(main, row, "Min. RTime Length:", vars["len_rt"], "sec")
 row += 1
 
-ttk.Label(main, text="Mass Error:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["error_mz"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Label(main, text="ppm").grid(column=2, row=row, sticky="W")
+util.add_entry(main, row, "Mass Error:", vars["error_mz"], "ppm")
 row += 1
 
-ttk.Label(main, text="Max. RTime Error:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["error_rt"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
+util.add_entry(main, row, "Max. RTime Error:", vars["error_rt"], "sec")
 row += 1
 
-ttk.Label(main, text="Moving Average Step:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["bin"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
+util.add_entry(main, row, "Moving Average Step:", vars["bin"], "sec")
 row += 1
 
-ttk.Label(main, text="Moving Average Factor:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["factor"]).grid(column=1, row=row, **util.sty_entry)
+util.add_entry(main, row, "Moving Average Factor:", vars["factor"])
 row += 1
 
-ttk.Label(main, text="Moving Average Scale:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["scale"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Label(main, text="sec").grid(column=2, row=row, sticky="W")
+util.add_entry(main, row, "Moving Average Scale:", vars["scale"], "sec")
 row += 1
 
-def do_select_out():
-    path = filedialog.askdirectory()
-    if len(path) > 0: vars["out"].set(path)
-
-ttk.Label(main, text="Output Directory:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["out"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_out).grid(column=2, row=row, **util.sty_button)
+util.add_entry(main, row, "Output Directory:", vars["out"], "Select", util.askdir(vars["out"]))
 row += 1
 
-def run_pepfeatalign(path):
+def run_pepfeatalign(paths):
     cmd = [
         vars["pepfeatalign"].get(),
         "--ref", vars["ref"].get(),
@@ -111,7 +83,7 @@ def run_pepfeatalign(path):
         "--factor", vars["factor"].get(),
         "--scale", vars["scale"].get(),
         "--out", vars["out"].get(),
-        path,
+        *paths,
     ]
     util.run_cmd(cmd, handles, skip_rest)
 
@@ -134,8 +106,7 @@ def do_run():
     running = True
     skip_rest = False
     do_save()
-    for p in vars["data"].get().split(";"):
-        run_pepfeatalign(p)
+    run_pepfeatalign(vars["data"].get().split(";"))
     running = False
     btn_run.config(state="normal")
 
@@ -159,15 +130,9 @@ btn_run.grid(column=2, row=0, padx=16, pady=8)
 ttk.Button(frm_btn, text="Stop Task", command=lambda: threading.Thread(target=do_stop).start()).grid(column=3, row=0, padx=16, pady=8)
 row += 1
 
-ttk.Separator(main, orient=tk.HORIZONTAL).grid(column=0, row=row, columnspan=3, sticky="WE")
+ttk.Separator(main, orient=tk.HORIZONTAL).grid(column=0, row=row, columnspan=3, sticky="EW")
 ttk.Label(main, text="Advanced Configuration").grid(column=0, row=row, columnspan=3)
 row += 1
 
-def do_select_pepfeatalign():
-    path = filedialog.askopenfilename()
-    if len(path) > 0: vars["pepfeatalign"].set(path)
-
-ttk.Label(main, text="PepFeatAlign:").grid(column=0, row=row, sticky="W")
-ttk.Entry(main, textvariable=vars["pepfeatalign"]).grid(column=1, row=row, **util.sty_entry)
-ttk.Button(main, text="Select", command=do_select_pepfeatalign).grid(column=2, row=row, **util.sty_button)
+util.add_entry(main, row, "PepFeatAlign:", vars["pepfeatalign"], "Select", util.askfile(vars["pepfeatalign"]))
 row += 1
