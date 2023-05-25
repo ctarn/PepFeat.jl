@@ -69,7 +69,6 @@ prepare(args) = begin
 end
 
 detect_feature(fname; V, n_peak, zs, ε, τ, gap, out) = begin
-    @info "loading from " * fname
     M = MesMS.read_ms1(fname)
     @info "deisotoping"
     I = @showprogress pmap(M) do m
@@ -89,8 +88,7 @@ detect_feature(fname; V, n_peak, zs, ε, τ, gap, out) = begin
     end
     F = [(; id=i, f...) for (i, f) in enumerate(F)]
     path = joinpath(out, splitext(basename(fname))[1] * ".feature.csv")
-    @info "result saving to " * path
-    CSV.write(path, F)
+    MesMS.safe_save(p -> CSV.write(p, F), path, "feature list")
 end
 
 main() = begin
@@ -134,12 +132,11 @@ main() = begin
             required = true
     end
     args = ArgParse.parse_args(settings)
+    paths = (sort∘unique∘reduce)(vcat, MesMS.match_path.(args["data"], ".ms1"); init=String[])
+    @info "file paths of selected data:"
+    foreach(x -> println("$(x[1]):\t$(x[2])"), enumerate(paths))
     sess = prepare(args)
-    for path in args["data"], file in readdir(dirname(path))
-        if file == basename(path) || (startswith(file, basename(path)) && endswith(file, ".ms1"))
-            detect_feature(joinpath(dirname(path), file); sess...)
-        end
-    end
+    detect_feature.(paths; sess...)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

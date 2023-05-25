@@ -70,18 +70,11 @@ align_feature(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = beg
         end
         Δs[i_b] = Δs[i_b-1] + (isempty(δs) ? 0 : α * mean(softer.(δs .- Δs[i_b-1])))
     end
-    path_out = joinpath(out, splitext(basename(path))[1] * "_aligned.csv")
-    @info "saving to " * path_out * "~"
-    CSV.write(path_out * "~", df)
-    mv(path_out * "~", path_out; force=true)
-    @info "saved to " * path_out
+    fname = splitext(basename(path))[1]
+    MesMS.safe_save(p -> CSV.write(p, df), joinpath(out, fname * "_aligned.csv"))
 
     df_shift = DataFrames.DataFrame(time=Vector((bin_min:bin_max) * bin_size), shift=Δs[begin+1:end-1])
-    path_out = joinpath(out, splitext(basename(path))[1] * "_shift.csv")
-    @info "saving to " * path_out * "~"
-    CSV.write(path_out * "~", df_shift)
-    mv(path_out * "~", path_out; force=true)
-    @info "saved to " * path_out
+    MesMS.safe_save(p -> CSV.write(p, df_shift), joinpath(out, fname * "_shift.csv"))
 
     df_matched = df[df.matched, :]
     data = """
@@ -96,11 +89,7 @@ const DELTA_RT_MATCH = [$(join(string.(df_matched.delta_rt), ","))]
         "{{ chartjs }}" => read(joinpath(DIR_DATA, "chartjs-4.2.1.js"), String),
         "{{ data }}" => data,
     )
-    path_out = joinpath(out, splitext(basename(path))[1] * ".html")
-    @info "saving to " * path_out * "~"
-    open(io -> write(io, html), path_out * "~"; write=true)
-    mv(path_out * "~", path_out; force=true)
-    @info "saved to " * path_out
+    MesMS.safe_save(p -> write(p, html), joinpath(out, fname * ".html"))
     MesMS.open_url(path_out)
 end
 
@@ -145,12 +134,11 @@ main() = begin
             required = true
     end
     args = ArgParse.parse_args(settings)
+    paths = (sort∘unique∘reduce)(vcat, MesMS.match_path.(args["data"], ".csv"); init=String[])
+    @info "file paths of selected data:"
+    foreach(x -> println("$(x[1]):\t$(x[2])"), enumerate(paths))
     sess = prepare(args)
-    for path in args["data"], file in readdir(dirname(path))
-        if file == basename(path) || (startswith(file, basename(path)) && endswith(file, ".csv"))
-            align_feature(joinpath(dirname(path), file); sess...)
-        end
-    end
+    align_feature.(paths; sess...)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
