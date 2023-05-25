@@ -12,52 +12,48 @@ h1, h2, h3, h4, h5, h6 {
     color: mediumseagreen;
 }
 
-div.wrapper {
-    width: 800px;
-    margin: 16px auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-header {
+body, header, main, footer {
     width: 100%;
-    text-align: center;
-    margin: 16px auto;
+    margin: 0;
+    padding: 0;
 }
 
-main {
+div.header, div.main, div.footer {
+    box-sizing: border-box;
     width: 100%;
-    min-height: 520px;
-    margin: 16px auto;
+    max-width: 800px;
+    min-width: 400px;
+    margin: 0 auto;
+    padding: 4px;
 }
 
-div.toc {
-    width: 40%;
-    float: right;
-}
-
-footer {
-    width: 100%;
-    margin: 16px auto;
-    display: flex;
-    justify-content: space-around;
-}
-
-header {
-    height: 64px;
+div.header {
+    height: 60px;
     display: flex;
     flex-direction: row;
-    align-items: center;
     justify-content: center;
+    align-items: center;
 }
 
-header img {
+div.main {
+    min-height: 600px;
+    padding: 16px;
+}
+
+div.footer {
+    height: 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+div.header img {
     height: 100%;
 }
 
 div.ui {
-    width: 50%;
+    width: 300px;
     float: right;
 }
 
@@ -102,9 +98,14 @@ pre.citation::-webkit-scrollbar {
 </style>
 </head>
 <body>
-<div class="wrapper">
-<header><img src="fig/PepFeat.svg" alt="logo"/><h1>PepFeat</h1></header>
+<header>
+<div class="header">
+<img src="fig/PepFeat.svg" alt="logo"/><h1>PepFeat</h1>
+</div>
+</header>
+
 <main>
+<div class="main">
 PepFeat is used to detect peptide features from LC-MS map.
 It is based on <a href="http://peppre.ctarn.io">PepPre</a>.
 
@@ -158,12 +159,15 @@ It is based on <a href="http://peppre.ctarn.io">PepPre</a>.
 
 <h4>APA</h4>
 <span class="citation">Tarn, C., Wu, Y.-Z., & Wang, K.-F. (2023). PepPre: Promote Peptide Identification Using Accurate and Comprehensive Precursors. bioRxiv, 2023.2005.2013.540645. https://doi.org/10.1101/2023.05.13.540645</span>
-
-</main>
-<footer>
-    <span><a href="http://ctarn.io">http://ctarn.io</a></span>
-    <span>Copyright &copy; Tarn Yeong Ching</span>
-    <span><a href="mailto:i@ctarn.io">i@ctarn.io</a></span></footer>
 </div>
+</main>
+
+<footer>
+<div class="footer">
+<span><a href="http://ctarn.io">http://ctarn.io</a></span>
+<span>Copyright &copy; Tarn Yeong Ching</span>
+<span><a href="mailto:i@ctarn.io">i@ctarn.io</a></span>
+</div>
+</footer>
 </body>
 </html>
