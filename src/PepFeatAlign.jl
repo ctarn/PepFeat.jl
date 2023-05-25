@@ -90,7 +90,7 @@ const DELTA_RT_MATCH = [$(join(string.(df_matched.delta_rt), ","))]
         "{{ data }}" => data,
     )
     MesMS.safe_save(p -> write(p, html), joinpath(out, fname * ".html"))
-    MesMS.open_url(path_out)
+    MesMS.open_url(joinpath(out, fname * ".html"))
 end
 
 main() = begin
