@@ -21,8 +21,8 @@ body, header, main, footer {
 div.header, div.main, div.footer {
     box-sizing: border-box;
     width: 100%;
-    max-width: 800px;
-    min-width: 400px;
+    max-width: 960px;
+    min-width: 320px;
     margin: 0 auto;
     padding: 4px;
 }
@@ -45,6 +45,10 @@ div.footer {
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
+}
+
+div.header a, div.footer a {
+    text-decoration: none;
 }
 
 canvas, input {
