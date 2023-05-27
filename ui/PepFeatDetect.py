@@ -1,16 +1,9 @@
 import os
-import threading
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk
 
 import meta
 import util
-
-handles = []
-running = False
-skip_rest = False
-
-path_autosave = os.path.join(meta.homedir, "autosave_detect.task")
 
 footnote = """
 Note:
@@ -42,138 +35,64 @@ vars_spec = {
     "mono": {"type": tk.StringVar, "value": path_mono},
     "proc": {"type": tk.StringVar, "value": "4"},
 }
-vars = {k: v["type"](value=v["value"]) for k, v in vars_spec.items()}
-util.load_task(path_autosave, vars)
-
-row = 0
-util.init_form(main)
-
-def do_select_data():
-    filetypes = (("MS1", "*.ms1"), ("RAW", "*.raw"), ("All", "*.*"))
-    files = filedialog.askopenfilenames(filetypes=filetypes)
-    if len(files) == 0:
-        return None
-    elif len(files) > 1:
-        print("multiple data selected:")
-        for file in files: print(">>", file)
-    vars["data"].set(";".join(files))
-    if len(vars["data"].get()) > 0 and len(vars["out"].get()) == 0:
-        vars["out"].set(os.path.join(os.path.dirname(files[0]), "out"))
-
-util.add_entry(main, row, "Data:", vars["data"], "Select", do_select_data)
-row += 1
-
-t = (("IPV", "*.bson"), ("All", "*.*"))
-util.add_entry(main, row, "IPV:", vars["ipv"], "Select", util.askfile(vars["ipv"], filetypes=t))
-row += 1
-
-util.add_entry(main, row, "Num. of Peaks:", vars["peak"], "per scan")
-row += 1
-
-_, f, _ = util.add_entry(main, row, "Charge Range:", ttk.Frame(main))
-ttk.Entry(f, textvariable=vars["charge_min"]).pack(side="left", fill="x", expand=True)
-ttk.Label(f, text="-").pack(side="left")
-ttk.Entry(f, textvariable=vars["charge_max"]).pack(side="left", fill="x", expand=True)
-row += 1
-
-util.add_entry(main, row, "Mass Error:", vars["error"], "ppm")
-row += 1
-
-util.add_entry(main, row, "Exclusion Threshold:", vars["exclusion"])
-row += 1
-
-util.add_entry(main, row, "Max. Scan Gap:", vars["gap"])
-row += 1
-
-util.add_entry(main, row, "Output Directory:", vars["out"], "Select", util.askdir(vars["out"]))
-row += 1
+task = util.Task("PepFeatDetect", vars_spec, path=meta.homedir)
+V = task.vars
 
 def run_thermorawread(data, out):
-    cmd = [vars["thermorawread"].get(), data, out]
-    if not util.is_windows:
-        cmd = [vars["mono"].get()] + cmd
-    util.run_cmd(cmd, handles, skip_rest)
+    task.call(*([] if util.is_windows else [V["mono"].get()]), V["thermorawread"].get(), data, out)
     return os.path.join(out, os.path.splitext(os.path.basename(data))[0] + ".ms1")
 
-def run_pepfeatdetect(paths):
-    cmd = [
-        vars["pepfeatdetect"].get(),
-        "--proc", vars["proc"].get(),
-        "--ipv", vars["ipv"].get(),
-        "--peak", vars["peak"].get(),
-        "--charge", vars["charge_min"].get() + ":" + vars["charge_max"].get(),
-        "--error", vars["error"].get(),
-        "--thres", vars["exclusion"].get(),
-        "--gap", vars["gap"].get(),
-        "--out", vars["out"].get(),
-        *paths,
-    ]
-    util.run_cmd(cmd, handles, skip_rest)
-
-def do_load():
-    path = filedialog.askopenfilename(filetypes=(("Configuration", "*.task"), ("All", "*.*")))
-    if len(path) > 0: util.load_task(path, vars)
-
-def do_save():
-    util.save_task(path_autosave, {k: v for k, v in vars.items() if v.get() != vars_spec[k]["value"]})
-    path = vars["out"].get()
-    if len(path) > 0:
-        os.makedirs(path, exist_ok=True)
-        util.save_task(os.path.join(path, "PepFeatDetect.task"), vars)
-    else:
-        print("`Output Directory` is required")
-
-def do_run():
-    btn_run.config(state="disabled")
-    global handles, running, skip_rest
-    running = True
-    skip_rest = False
-    do_save()
+def run():
     paths = []
-    for p in vars["data"].get().split(";"):
+    for p in V["data"].get().split(";"):
         ext = os.path.splitext(p)[1].lower()
-        if ext == ".raw":
-            p = run_thermorawread(p, vars["out"].get())
+        if ext == ".raw": p = run_thermorawread(p, V["out"].get())
         paths.append(p)
-    run_pepfeatdetect(paths)
-    running = False
-    btn_run.config(state="normal")
+    task.call(V["pepfeatdetect"].get(), *paths, "--out", V["out"].get(),
+        "--proc", V["proc"].get(),
+        "--ipv", V["ipv"].get(),
+        "--peak", V["peak"].get(),
+        "--charge", V["charge_min"].get() + ":" + V["charge_max"].get(),
+        "--error", V["error"].get(),
+        "--thres", V["exclusion"].get(),
+        "--gap", V["gap"].get(),
+    )
 
-def do_stop():
-    global handles, running, skip_rest
-    skip_rest = True
-    for job in handles:
-        if job.poll() is None:
-            job.terminate()
-    running = False
-    handles.clear()
-    btn_run.config(state="normal")
-    print("PepFeatDetect stopped.")
-
-frm_btn = ttk.Frame(main)
-frm_btn.grid(column=0, row=row, columnspan=3)
-ttk.Button(frm_btn, text="Load Task", command=do_load).grid(column=0, row=0, padx=16, pady=8)
-ttk.Button(frm_btn, text="Save Task", command=do_save).grid(column=1, row=0, padx=16, pady=8)
-btn_run = ttk.Button(frm_btn, text="Run Task", command=lambda: threading.Thread(target=do_run).start())
-btn_run.grid(column=2, row=0, padx=16, pady=8)
-ttk.Button(frm_btn, text="Stop Task", command=lambda: threading.Thread(target=do_stop).start()).grid(column=3, row=0, padx=16, pady=8)
-row += 1
-
-ttk.Separator(main, orient=tk.HORIZONTAL).grid(column=0, row=row, columnspan=3, sticky="EW")
-ttk.Label(main, text="Advanced Configuration").grid(column=0, row=row, columnspan=3)
-row += 1
-
-util.add_entry(main, row, "PepFeatDetect:", vars["pepfeatdetect"], "Select", util.askfile(vars["pepfeatdetect"]))
-row += 1
-
-util.add_entry(main, row, "ThermoRawRead:", vars["thermorawread"], "Select", util.askfile(vars["thermorawread"]))
-row += 1
-
+util.init_form(main)
+I = 0
+t = (("MS1", "*.ms1"), ("RAW", "*.raw"), ("All", "*.*"))
+util.add_entry(main, I, "Data:", V["data"], "Select", util.askfiles(V["data"], V["out"], filetypes=t))
+I += 1
+t = (("IPV", "*.bson"), ("All", "*.*"))
+util.add_entry(main, I, "IPV:", V["ipv"], "Select", util.askfile(V["ipv"], filetypes=t))
+I += 1
+util.add_entry(main, I, "Num. of Peaks:", V["peak"], "per scan")
+I += 1
+_, f, _ = util.add_entry(main, I, "Charge Range:", ttk.Frame(main))
+ttk.Entry(f, textvariable=V["charge_min"]).pack(side="left", fill="x", expand=True)
+ttk.Label(f, text="-").pack(side="left")
+ttk.Entry(f, textvariable=V["charge_max"]).pack(side="left", fill="x", expand=True)
+I += 1
+util.add_entry(main, I, "Mass Error:", V["error"], "ppm")
+I += 1
+util.add_entry(main, I, "Exclusion Threshold:", V["exclusion"])
+I += 1
+util.add_entry(main, I, "Max. Scan Gap:", V["gap"])
+I += 1
+util.add_entry(main, I, "Output Directory:", V["out"], "Select", util.askdir(V["out"]))
+I += 1
+task.init_ctrl(ttk.Frame(main), run).grid(column=0, row=I, columnspan=3)
+I += 1
+ttk.Separator(main, orient=tk.HORIZONTAL).grid(column=0, row=I, columnspan=3, sticky="EW")
+ttk.Label(main, text="Advanced Configuration").grid(column=0, row=I, columnspan=3)
+I += 1
+util.add_entry(main, I, "PepFeatDetect:", V["pepfeatdetect"], "Select", util.askfile(V["pepfeatdetect"]))
+I += 1
+util.add_entry(main, I, "ThermoRawRead:", V["thermorawread"], "Select", util.askfile(V["thermorawread"]))
+I += 1
 if not util.is_windows:
-    util.add_entry(main, row, "Mono Runtime:", vars["mono"], "Select", util.askfile(vars["mono"]))
-    row += 1
-
-util.add_entry(main, row, "Parallelization:", vars["proc"])
-row += 1
-
-ttk.Label(main, text=footnote, justify="left").grid(column=0, row=row, columnspan=3, sticky="EW")
+    util.add_entry(main, I, "Mono Runtime:", V["mono"], "Select", util.askfile(V["mono"]))
+    I += 1
+util.add_entry(main, I, "Parallelization:", V["proc"])
+I += 1
+ttk.Label(main, text=footnote, justify="left").grid(column=0, row=I, columnspan=3, sticky="EW")
