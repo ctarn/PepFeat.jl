@@ -101,7 +101,7 @@ main() = begin
         "--ipv"
             help = "model file"
             metavar = "model"
-            default = joinpath(homedir(), ".MesMS/IPV.bson")
+            default = joinpath(homedir(), ".MesMS/peptide.ipv")
         "--peak", "-p"
             help = "max #peak per scan"
             metavar = "num"

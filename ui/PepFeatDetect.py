@@ -22,7 +22,7 @@ else:
 
 vars_spec = {
     "data": {"type": tk.StringVar, "value": ""},
-    "ipv": {"type": tk.StringVar, "value": os.path.join(meta.homedir, "IPV.bson")},
+    "ipv": {"type": tk.StringVar, "value": os.path.join(meta.homedir, "peptide.ipv")},
     "peak": {"type": tk.StringVar, "value": "4000"},
     "charge_min": {"type": tk.StringVar, "value": "2"},
     "charge_max": {"type": tk.StringVar, "value": "6"},
@@ -63,7 +63,7 @@ I = 0
 t = (("MS1", "*.ms1"), ("RAW", "*.raw"), ("All", "*.*"))
 util.add_entry(main, I, "Data:", V["data"], "Select", util.askfiles(V["data"], V["out"], filetypes=t))
 I += 1
-t = (("IPV", "*.bson"), ("All", "*.*"))
+t = (("IPV", "*.ipv"), ("All", "*.*"))
 util.add_entry(main, I, "IPV:", V["ipv"], "Select", util.askfile(V["ipv"], filetypes=t))
 I += 1
 util.add_entry(main, I, "Num. of Peaks:", V["peak"], "per scan")
