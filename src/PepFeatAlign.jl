@@ -26,7 +26,7 @@ prepare(args) = begin
     return (; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out)
 end
 
-align_feature(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = begin
+process(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = begin
     @info "feature list loading from " * path
     df = path |> CSV.File |> DataFrames.DataFrame
     df.matched .= false
@@ -137,7 +137,7 @@ main() = begin
     paths = (sort∘unique∘reduce)(vcat, MesMS.match_path.(args["data"], ".csv"); init=String[])
     @info "file paths of selected data:"
     foreach(x -> println("$(x[1]):\t$(x[2])"), enumerate(paths))
-    align_feature.(paths; prepare(args)...)
+    process.(paths; prepare(args)...)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

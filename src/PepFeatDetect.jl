@@ -68,7 +68,7 @@ prepare(args) = begin
     return (; V, n_peak, zs, ε, τ, gap, out)
 end
 
-detect_feature(fname; V, n_peak, zs, ε, τ, gap, out) = begin
+process(fname; V, n_peak, zs, ε, τ, gap, out) = begin
     M = MesMS.read_ms(fname; MS2=false).MS1
     @info "deisotoping"
     I = @showprogress pmap(M) do m
@@ -135,7 +135,7 @@ main() = begin
     paths = (sort∘unique∘reduce)(vcat, MesMS.match_path.(args["data"], ".mes"); init=String[])
     @info "file paths of selected data:"
     foreach(x -> println("$(x[1]):\t$(x[2])"), enumerate(paths))
-    detect_feature.(paths; prepare(args)...)
+    process.(paths; prepare(args)...)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
