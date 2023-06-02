@@ -69,7 +69,7 @@ prepare(args) = begin
 end
 
 detect_feature(fname; V, n_peak, zs, ε, τ, gap, out) = begin
-    M = MesMS.read_ms1(fname)
+    M = MesMS.read_ms(fname; MS2=false).MS1
     @info "deisotoping"
     I = @showprogress pmap(M) do m
         peaks = MesMS.pick_by_inten(m.peaks, n_peak)
@@ -127,16 +127,15 @@ main() = begin
             metavar = "output"
             default = "./out/"
         "data"
-            help = "list of .ms1 files"
+            help = "list of .mes or .ms1 files"
             nargs = '+'
             required = true
     end
     args = ArgParse.parse_args(settings)
-    paths = (sort∘unique∘reduce)(vcat, MesMS.match_path.(args["data"], ".ms1"); init=String[])
+    paths = (sort∘unique∘reduce)(vcat, MesMS.match_path.(args["data"], ".mes"); init=String[])
     @info "file paths of selected data:"
     foreach(x -> println("$(x[1]):\t$(x[2])"), enumerate(paths))
-    sess = prepare(args)
-    detect_feature.(paths; sess...)
+    detect_feature.(paths; prepare(args)...)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

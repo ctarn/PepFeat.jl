@@ -137,8 +137,7 @@ main() = begin
     paths = (sort∘unique∘reduce)(vcat, MesMS.match_path.(args["data"], ".csv"); init=String[])
     @info "file paths of selected data:"
     foreach(x -> println("$(x[1]):\t$(x[2])"), enumerate(paths))
-    sess = prepare(args)
-    align_feature.(paths; sess...)
+    align_feature.(paths; prepare(args)...)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
