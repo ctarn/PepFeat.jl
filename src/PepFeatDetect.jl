@@ -19,7 +19,7 @@ build_feature(ions, ε, V) = begin
     mh = MesMS.mz_to_mh(mz, z)
     mz_max = MesMS.ipv_m(mz * z, V)[argmax(MesMS.ipv_w(apex, V))] / z + mz
     # retention time
-    rtime, _ = MesMS.calc_centroid(map(i -> i.ms.retention_time, ions), map(i -> i.x, ions))
+    rtime, _ = MesMS.centroid(map(i -> i.ms.retention_time, ions), map(i -> i.x, ions))
     rtime_start, rtime_stop = extrema(i -> i.ms.retention_time, ions)
     rtime_len = rtime_stop - rtime_start
     rtime_apex = apex.ms.retention_time
