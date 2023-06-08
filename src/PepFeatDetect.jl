@@ -74,7 +74,7 @@ process(fname; V, n_peak, zs, ε, τ, gap, out) = begin
     I = @showprogress pmap(M) do m
         peaks = MesMS.pick_by_inten(m.peaks, n_peak)
         ions = [MesMS.Ion(p.mz, z) for p in peaks for z in zs]
-        ions = filter(i -> i.mz * i.z < length(V) && PepIso.prefilter(i, peaks, ε, V), ions)
+        ions = filter(i -> i.mz * i.z < MesMS.ipv_max(V) && PepIso.prefilter(i, peaks, ε, V), ions)
         ions = PepIso.deisotope(ions, peaks, τ, ε, V; split=true)
         ions = [(; ion..., ms=m) for ion in ions]
     end
