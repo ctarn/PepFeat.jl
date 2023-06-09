@@ -12,21 +12,22 @@ import RelocatableFolders: @path
 const DIR_DATA = @path joinpath(@__DIR__, "../data")
 
 prepare(args) = begin
+    @info "reference loading from " * args["ref"]
+    df_ref = args["ref"] |> CSV.File |> DataFrames.DataFrame
+    out = mkpath(args["out"])
     len_rt = parse(Float64, args["len_rt"])
     ε_m = parse(Float64, args["error_mz"]) * 1e-6
     ε_t = parse(Float64, args["error_rt"])
     bin_size = parse(Float64, args["bin"])
     α = parse(Float64, args["factor"])
     softer = MesMS.exp_softer(parse(Float64, args["scale"]))
-    @info "reference loading from " * args["ref"]
-    df_ref = args["ref"] |> CSV.File |> DataFrames.DataFrame
+
     df_ref = df_ref[df_ref.rtime_len .≥ len_rt, :]
     DataFrames.sort!(df_ref, :mz)
-    out = mkpath(args["out"])
-    return (; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out)
+    return (; df_ref, out, len_rt, ε_m, ε_t, bin_size, α, softer)
 end
 
-process(path; df_ref, len_rt, ε_m, ε_t, bin_size, α, softer, out) = begin
+process(path; df_ref, out, len_rt, ε_m, ε_t, bin_size, α, softer) = begin
     @info "feature list loading from " * path
     df = path |> CSV.File |> DataFrames.DataFrame
     df.matched .= false
@@ -96,6 +97,18 @@ end
 main() = begin
     settings = ArgParse.ArgParseSettings(prog="PepFeatAlign")
     ArgParse.@add_arg_table! settings begin
+        "data"
+            help = "feature list"
+            nargs = '+'
+            required = true
+        "--ref", "--to"
+            help = "referred feature list"
+            metavar = "reference"
+            required = true
+        "--out", "-o"
+            help = "output directory"
+            metavar = "./out/"
+            default = "./out/"
         "--len_rt", "-l"
             help = "min retention time length"
             metavar = "second"
@@ -120,21 +133,9 @@ main() = begin
             help = "moving average scale"
             metavar = "scale"
             default = "64"
-        "--ref", "--to"
-            help = "referred feature list"
-            metavar = "reference"
-            required = true
-        "--out", "-o"
-            help = "output directory"
-            metavar = "output"
-            default = "./out/"
-        "data"
-            help = "feature list"
-            nargs = '+'
-            required = true
     end
     args = ArgParse.parse_args(settings)
-    paths = (sort∘unique∘reduce)(vcat, MesMS.match_path.(args["data"], ".csv"); init=String[])
+    paths = reduce(vcat, MesMS.match_path.(args["data"], ".csv")) |> unique |> sort
     @info "file paths of selected data:"
     foreach(x -> println("$(x[1]):\t$(x[2])"), enumerate(paths))
     process.(paths; prepare(args)...)

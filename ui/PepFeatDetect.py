@@ -22,6 +22,7 @@ else:
 
 vars_spec = {
     "data": {"type": tk.StringVar, "value": ""},
+    "out": {"type": tk.StringVar, "value": ""},
     "ipv": {"type": tk.StringVar, "value": os.path.join(meta.homedir, "peptide.ipv")},
     "peak": {"type": tk.StringVar, "value": "4000"},
     "charge_min": {"type": tk.StringVar, "value": "2"},
@@ -29,11 +30,10 @@ vars_spec = {
     "error": {"type": tk.StringVar, "value": "10.0"},
     "exclusion": {"type": tk.StringVar, "value": "1.0"},
     "gap": {"type": tk.StringVar, "value": "16"},
-    "out": {"type": tk.StringVar, "value": ""},
+    "proc": {"type": tk.StringVar, "value": "4"},
     "pepfeatdetect": {"type": tk.StringVar, "value": util.get_content("PepFeat", "bin", "PepFeatDetect")},
     "thermorawread": {"type": tk.StringVar, "value": util.get_content("ThermoRawRead", "ThermoRawRead.exe", shared=True)},
     "mono": {"type": tk.StringVar, "value": path_mono},
-    "proc": {"type": tk.StringVar, "value": "4"},
 }
 task = util.Task("PepFeatDetect", vars_spec, path=meta.homedir)
 V = task.vars
@@ -49,22 +49,22 @@ def run():
         if ext == ".raw": p = run_thermorawread(p, V["out"].get())
         paths.append(p)
     task.call(V["pepfeatdetect"].get(), *paths, "--out", V["out"].get(),
-        "--proc", V["proc"].get(),
         "--ipv", V["ipv"].get(),
         "--peak", V["peak"].get(),
         "--charge", V["charge_min"].get() + ":" + V["charge_max"].get(),
         "--error", V["error"].get(),
         "--thres", V["exclusion"].get(),
         "--gap", V["gap"].get(),
+        "--proc", V["proc"].get(),
     )
 
 util.init_form(main)
 I = 0
-t = (("MS1", "*.ms1"), ("RAW", "*.raw"), ("All", "*.*"))
+t = (("MES", "*.mes"), ("MS1", "*.ms1"), ("RAW", "*.raw"), ("All", "*.*"))
 util.add_entry(main, I, "Data:", V["data"], "Select", util.askfiles(V["data"], V["out"], filetypes=t))
 I += 1
 t = (("IPV", "*.ipv"), ("All", "*.*"))
-util.add_entry(main, I, "IPV:", V["ipv"], "Select", util.askfile(V["ipv"], filetypes=t))
+util.add_entry(main, I, "Isotope Pattern:", V["ipv"], "Select", util.askfile(V["ipv"], filetypes=t))
 I += 1
 util.add_entry(main, I, "Num. of Peaks:", V["peak"], "per scan")
 I += 1
@@ -73,7 +73,7 @@ ttk.Entry(f, textvariable=V["charge_min"]).pack(side="left", fill="x", expand=Tr
 ttk.Label(f, text="-").pack(side="left")
 ttk.Entry(f, textvariable=V["charge_max"]).pack(side="left", fill="x", expand=True)
 I += 1
-util.add_entry(main, I, "Mass Error:", V["error"], "ppm")
+util.add_entry(main, I, "Max. Mass Error:", V["error"], "ppm")
 I += 1
 util.add_entry(main, I, "Exclusion Threshold:", V["exclusion"])
 I += 1

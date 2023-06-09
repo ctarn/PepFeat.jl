@@ -10,21 +10,22 @@ main.pack(fill="both")
 vars_spec = {
     "data": {"type": tk.StringVar, "value": ""},
     "ref": {"type": tk.StringVar, "value": ""},
+    "out": {"type": tk.StringVar, "value": ""},
     "len_rt": {"type": tk.StringVar, "value": "4.0"},
     "error_mz": {"type": tk.StringVar, "value": "1.0"},
     "error_rt": {"type": tk.StringVar, "value": "600.0"},
     "bin": {"type": tk.StringVar, "value": "1.0"},
     "factor": {"type": tk.StringVar, "value": "0.1"},
     "scale": {"type": tk.StringVar, "value": "64"},
-    "out": {"type": tk.StringVar, "value": ""},
     "pepfeatalign": {"type": tk.StringVar, "value": util.get_content("PepFeat", "bin", "PepFeatAlign")},
 }
 task = util.Task("PepFeatAlign", vars_spec, path=meta.homedir)
 V = task.vars
 
 def run():
-    task.call(V["pepfeatalign"].get(), *(V["data"].get().split(";")), "--out", V["out"].get(),
+    task.call(V["pepfeatalign"].get(), *(V["data"].get().split(";")),
         "--ref", V["ref"].get(),
+        "--out", V["out"].get(),
         "--len_rt", V["len_rt"].get(),
         "--error_mz", V["error_mz"].get(),
         "--error_rt", V["error_rt"].get(),
@@ -42,7 +43,7 @@ util.add_entry(main, I, "Referred List:", V["ref"], "Select", util.askfile(V["re
 I += 1
 util.add_entry(main, I, "Min. RTime Length:", V["len_rt"], "sec")
 I += 1
-util.add_entry(main, I, "Mass Error:", V["error_mz"], "ppm")
+util.add_entry(main, I, "Max. Mass Error:", V["error_mz"], "ppm")
 I += 1
 util.add_entry(main, I, "Max. RTime Error:", V["error_rt"], "sec")
 I += 1

@@ -5,8 +5,7 @@ using Statistics
 
 import ArgParse
 import CSV
-import MesMS
-import MesMS: PepIso
+import MesMS: MesMS, PepIso
 import ProgressMeter: @showprogress
 
 check_iso(ion, spec, ε, V) = map(m -> !isempty(MesMS.query_ε(spec, ion.mz + m / ion.z, ε)), MesMS.ipv_m(ion, V))
@@ -56,20 +55,20 @@ build_feature(ions, ε, V) = begin
 end
 
 prepare(args) = begin
-    addprocs(parse(Int, args["proc"]))
-    @eval @everywhere using PepFeat.PepFeatDetect
+    out = mkpath(args["out"])
     V = MesMS.build_ipv(args["ipv"])
     n_peak = parse(Int, args["peak"])
     zs = Vector{Int}(MesMS.parse_range(Int, args["charge"]))
     ε = parse(Float64, args["error"]) * 1.0e-6
     τ = parse(Float64, args["thres"])
     gap = parse(Int, args["gap"])
-    out = mkpath(args["out"])
-    return (; V, n_peak, zs, ε, τ, gap, out)
+    addprocs(parse(Int, args["proc"]))
+    @eval @everywhere using PepFeat.PepFeatDetect
+    return (; out, V, n_peak, zs, ε, τ, gap)
 end
 
-process(fname; V, n_peak, zs, ε, τ, gap, out) = begin
-    M = MesMS.read_ms(fname; MS2=false).MS1
+process(path; out, V, n_peak, zs, ε, τ, gap) = begin
+    M = MesMS.read_ms(path; MS2=false).MS1
     @info "deisotoping"
     I = @showprogress pmap(M) do m
         peaks = MesMS.pick_by_inten(m.peaks, n_peak)
@@ -87,20 +86,23 @@ process(fname; V, n_peak, zs, ε, τ, gap, out) = begin
         build_feature(ions, ε, V)
     end
     F = [(; id=i, f...) for (i, f) in enumerate(F)]
-    path = joinpath(out, splitext(basename(fname))[1] * ".feature.csv")
-    MesMS.safe_save(p -> CSV.write(p, F), path, "feature list")
+    MesMS.safe_save(p -> CSV.write(p, F), joinpath(out, splitext(basename(path))[1] * ".feature.csv"))
 end
 
 main() = begin
     settings = ArgParse.ArgParseSettings(prog="PepFeatDetect")
     ArgParse.@add_arg_table! settings begin
-        "--proc"
-            help = "number of additional worker processes"
-            metavar = "n"
-            default = "4"
+        "data"
+            help = "list of .mes or .ms1 files"
+            nargs = '+'
+            required = true
+        "--out", "-o"
+            help = "output directory"
+            metavar = "./out/"
+            default = "./out/"
         "--ipv"
-            help = "model file"
-            metavar = "model"
+            help = "Isotope Pattern Vector file"
+            metavar = "IPV"
             default = joinpath(homedir(), ".MesMS/peptide.ipv")
         "--peak", "-p"
             help = "max #peak per scan"
@@ -122,17 +124,13 @@ main() = begin
             help = "scan gap"
             metavar = "gap"
             default = "16"
-        "--out", "-o"
-            help = "output directory"
-            metavar = "output"
-            default = "./out/"
-        "data"
-            help = "list of .mes or .ms1 files"
-            nargs = '+'
-            required = true
+        "--proc"
+            help = "number of additional worker processes"
+            metavar = "n"
+            default = "4"
     end
     args = ArgParse.parse_args(settings)
-    paths = (sort∘unique∘reduce)(vcat, MesMS.match_path.(args["data"], ".mes"); init=String[])
+    paths = reduce(vcat, MesMS.match_path.(args["data"], ".mes")) |> unique |> sort
     @info "file paths of selected data:"
     foreach(x -> println("$(x[1]):\t$(x[2])"), enumerate(paths))
     process.(paths; prepare(args)...)
