@@ -8,7 +8,7 @@ import CSV
 import MesMS: MesMS, PepIso
 import ProgressMeter: @showprogress
 
-check_iso(ion, spec, ε, V) = map(m -> !isempty(MesMS.query_ε(spec, ion.mz + m / ion.z, ε)), MesMS.ipv_m(ion, V))
+check_iso(ion, spec, ε, V) = map(x -> !isempty(MesMS.query_ε(spec, x, ε)), MesMS.ipv_mz(ion, V))
 
 build_feature(ions, ε, V) = begin
     apex = argmax(i -> i.x, ions)
@@ -16,7 +16,7 @@ build_feature(ions, ε, V) = begin
     mz = sum(i -> i.mz * i.x, ions) / sum(i -> i.x, ions)
     z = ions[begin].z
     mh = MesMS.mz_to_mh(mz, z)
-    mz_max = MesMS.ipv_m(mz * z, V)[argmax(MesMS.ipv_w(apex, V))] / z + mz
+    mz_max = MesMS.ipv_mz(mz, z, argmax(MesMS.ipv_w(apex, V)), V)
     # retention time
     rtime, _ = MesMS.centroid(map(i -> i.ms.retention_time, ions), map(i -> i.x, ions))
     rtime_start, rtime_stop = extrema(i -> i.ms.retention_time, ions)
