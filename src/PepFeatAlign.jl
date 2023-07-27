@@ -46,7 +46,7 @@ process(path; df_ref, out, len_rt, ε_m, ε_t, bin_size, α, softer) = begin
     @showprogress for (i, idx) in enumerate(df.bin_idx)
         push!(bins[idx], i)
     end
-    referable = trues(DataFrames.nrow(df_ref))
+    referable = trues(size(df_ref, 1))
     @showprogress for i_b in 2:(length(bins)-1)
         δs = Float64[]
         for i_f in bins[i_b]
